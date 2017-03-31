@@ -19,7 +19,7 @@ public class Cache {
 	 *   4 - Medium-High (Medium plus ???)
 	 *   5 - High (Full Debug Output Will Be Generated)
 	 */
-	protected static Integer DEBUG_LEVEL = 1;
+	protected static Integer DEBUG_LEVEL = 0;
 	
 	/**
 	 * Link Back to Cache Controller
@@ -276,9 +276,7 @@ public class Cache {
 		//Resolve Miss
 		resolveMiss(mAddress, block.getBlockAddress());
 		//Update Value
-		System.out.println("putBlock: memory[" + mAddress + "]: " + memory[mAddress]);
 		memory[mAddress] = block;
-		System.out.println("putBlock: memory[" + mAddress + "]: " + memory[mAddress]);
 	}
 	
 	private Integer[] getPossibleMemoryAddressArray(Integer address){
@@ -358,6 +356,9 @@ public class Cache {
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
+		
+		cacheController.cacheStats.REPLACEMENT++;
+		
 		memory[mAddress] = null;
 	}
 }

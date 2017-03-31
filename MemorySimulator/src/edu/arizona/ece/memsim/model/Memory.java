@@ -23,7 +23,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 *   4 - Medium-High (Medium plus ???)
 	 *   5 - High (Full Debug Output Will Be Generated)
 	 */
-	protected static Integer DEBUG_LEVEL = 1;
+	protected static Integer DEBUG_LEVEL = 0;
 	
 	/**
 	 * Dynamic Array to Track the Child Caches to this Cache, this is used in Cache Coherency Protocols
@@ -214,5 +214,9 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		}
 		// No Local Implementation Needed
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+	}
+	
+	public CacheStatistics getMemoryStats(){
+		return cacheStats;
 	}
 }

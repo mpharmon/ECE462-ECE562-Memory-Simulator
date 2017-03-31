@@ -23,7 +23,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 *   4 - Medium-High (Medium plus ???)
 	 *   5 - High (Full Debug Output Will Be Generated)
 	 */
-	protected static Integer DEBUG_LEVEL = 1;
+	protected static Integer DEBUG_LEVEL = 0;
 	
 	/**
 	 * Cache Level (1-n)
@@ -336,5 +336,9 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		}
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+	}
+	
+	public CacheStatistics getCacheStats(){
+		return cacheStats;
 	}
 }
