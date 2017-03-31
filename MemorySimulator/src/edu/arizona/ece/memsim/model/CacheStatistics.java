@@ -14,34 +14,64 @@ public class CacheStatistics {
 	public Integer ACCESS;
 	
 	/**
-	 * Counts Cache Misses
+	 * Counts Cache Read Hits
 	 */
-	public Integer MISS;
+	public Integer READ_HIT;
 	
 	/**
-	 * Counts Cache Hits
+	 * Counts Cache Read Misses
 	 */
-	public Integer HIT;
+	public Integer READ_MISS;
+	
+	/**
+	 * Counts Cache Block Read Misses
+	 */
+	public Integer BLOCKREAD_HIT;
+	
+	/**
+	 * Counts Cache Block Read Misses
+	 */
+	public Integer BLOCKREAD_MISS;
+	
+	/**
+	 * Counts Cache Block Write Hits
+	 */
+	public Integer BLOCKWRITE_HIT;
+	
+	/**
+	 * Counts Cache Block Write Misses
+	 */
+	public Integer BLOCKWRITE_MISS;
+	
+	/**
+	 * Counts Cache Write Misses
+	 */
+	public Integer WRITE_MISS;
+
+	/**
+	 * Counts Cache Write Hits
+	 */
+	public Integer WRITE_HIT;
 	
 	/**
 	 * Counts Cache Element Reads
 	 */
-	public Integer READ;
+	//public Integer READ;
 	
 	/**
 	 * Counts Cache Block Reads
 	 */
-	public Integer BLOCKREAD;
+	//public Integer BLOCKREAD;
 	
 	/**
 	 * Counts Cache Element Writes
 	 */
-	public Integer WRITE;
+	//public Integer WRITE;
 	
 	/**
 	 * Counts Cache Block Writes
 	 */
-	public Integer BLOCKWRITE;
+	//public Integer BLOCKWRITE;
 	
 	/**
 	 * Counts Cache Replacements
@@ -60,12 +90,14 @@ public class CacheStatistics {
 	
 	public CacheStatistics(){
 		ACCESS = new Integer(0);
-		MISS = new Integer(0);
-		HIT = new Integer(0);
-		READ = new Integer(0);
-		BLOCKREAD = new Integer(0);
-		WRITE = new Integer(0);
-		BLOCKWRITE = new Integer(0);
+		READ_HIT = new Integer(0);
+		READ_MISS = new Integer(0);
+		WRITE_HIT = new Integer(0);
+		WRITE_MISS = new Integer(0);
+		BLOCKREAD_HIT = new Integer(0);
+		BLOCKREAD_MISS = new Integer(0);
+		BLOCKWRITE_HIT = new Integer(0);
+		BLOCKWRITE_MISS = new Integer(0);
 		REPLACEMENT = new Integer(0);
 		WRITEBACK = new Integer(0);
 		INVALIDATE = new Integer(0);

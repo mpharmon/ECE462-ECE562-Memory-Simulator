@@ -80,10 +80,19 @@ public class Program{
 	
 	protected static void printStats(String prefix, CacheStatistics stats){
 		System.out.println(prefix + ".ACCESSES\t\t" + stats.ACCESS);
-		System.out.println(prefix + ".READS\t\t" + stats.READ);
-		System.out.println(prefix + ".BLOCKREADS\t\t" + stats.BLOCKREAD);
-		System.out.println(prefix + ".WRITES\t\t" + stats.WRITE);
-		System.out.println(prefix + ".BLOCKWRITES\t\t" + stats.BLOCKWRITE);
+		System.out.println(prefix + ".READ_TOTAL\t\t" + (stats.READ_HIT + stats.READ_MISS));
+		System.out.println(prefix + ".READ_HITS\t\t" + stats.READ_HIT);
+		System.out.println(prefix + ".READ_MISS\t\t" + stats.READ_MISS);
+		System.out.println(prefix + ".BLOCKREAD_TOTAL\t" + (stats.BLOCKREAD_HIT + stats.BLOCKREAD_MISS));
+		System.out.println(prefix + ".BLOCKREAD_HITS\t" + stats.BLOCKREAD_HIT);
+		System.out.println(prefix + ".BLOCKREAD_MISSES\t" + stats.BLOCKREAD_MISS);
+		System.out.println(prefix + ".WRITE_TOTAL\t\t" + (stats.WRITE_HIT + stats.WRITE_MISS));
+		System.out.println(prefix + ".WRITE_HIT\t\t" + stats.WRITE_HIT);
+		System.out.println(prefix + ".WRITE_MISS\t\t" + stats.WRITE_MISS);
+		System.out.println(prefix + ".BLOCKWRITE_TOTAL\t" + (stats.BLOCKWRITE_HIT + stats.BLOCKWRITE_MISS));
+		System.out.println(prefix + ".BLOCKWRITE_HITS\t" + stats.BLOCKWRITE_HIT);
+		System.out.println(prefix + ".BLOCKWRITE_MISSES\t" + stats.BLOCKWRITE_MISS);
 		System.out.println(prefix + ".REPLACEMENTS\t\t" + stats.REPLACEMENT);
+		System.out.println(prefix + ".INVALIDATES\t\t" + stats.INVALIDATE);
 	}
 }

@@ -179,7 +179,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
 		cacheStats.ACCESS++;
-		cacheStats.READ++;
+		//cacheStats.READ++;
 		
 		return returnValue;
 	}
@@ -208,7 +208,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
 		cacheStats.ACCESS++;
-		cacheStats.BLOCKREAD++;
+		//cacheStats.BLOCKREAD++;
 		
 		return returnValue;
 	}
@@ -237,7 +237,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		cache.put(eAddress, bite);
 		
 		cacheStats.ACCESS++;
-		cacheStats.WRITE++;
+		//cacheStats.WRITE++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
@@ -261,7 +261,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		cache.putBlock(block);
 		
 		cacheStats.ACCESS++;
-		cacheStats.BLOCKWRITE++;
+		//cacheStats.BLOCKWRITE++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
@@ -301,7 +301,8 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 			while(childCacheIterator.hasNext()){
 				childCacheIterator.next().onWriteMiss(address);
 			}
-			// TODO: Handle Locally
+			// TODO: Handle - Write Back Value at Address to Memory and Invalidate
+			cacheStats.INVALIDATE++;
 		}
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
@@ -316,7 +317,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 			while(childCacheIterator.hasNext()){
 				childCacheIterator.next().onReadMiss(address);
 			}
-			// TODO: Handle Locally
+			// TODO: Handle - Write Back Value at Address to Memory
 		}
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");

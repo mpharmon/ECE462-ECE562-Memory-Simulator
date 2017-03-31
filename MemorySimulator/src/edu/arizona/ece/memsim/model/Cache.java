@@ -148,6 +148,7 @@ public class Cache {
 				if(memory[mAddress].getBlockAddress().equals(bAddress)){
 					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
 					// Adjust loadQueue
+					cacheController.cacheStats.READ_HIT++;
 					return memory[mAddress].getElement(offset);
 				}
 				if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
@@ -156,6 +157,7 @@ public class Cache {
 		}
 		
 		// If We Get Here We have a Miss
+		cacheController.cacheStats.READ_MISS++;
 		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
 		Integer mAddress = getNextWriteLocation(bAddress);
 		//Write Back If Necessary
@@ -181,6 +183,7 @@ public class Cache {
 			if(memory[mAddress] != null){
 				if(memory[mAddress].getBlockAddress().equals(bAddress)){
 					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
+					cacheController.cacheStats.BLOCKREAD_HIT++;
 					// Adjust loadQueue
 					return memory[mAddress];
 				}
@@ -190,6 +193,7 @@ public class Cache {
 		}
 		
 		// If We Get Here We Have a Cache Miss
+		cacheController.cacheStats.BLOCKREAD_MISS++;
 		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
 		Integer mAddress = getNextWriteLocation(bAddress);
 		//Write Back If Necessary
@@ -227,6 +231,7 @@ public class Cache {
 			if(memory[mAddress] != null){
 				if(memory[mAddress].getBlockAddress().equals(bAddress)){
 					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
+					cacheController.cacheStats.WRITE_HIT++;
 					// Adjust loadQueue
 					memory[mAddress].getElement(offset).setData(bite);
 					return;
@@ -238,6 +243,7 @@ public class Cache {
 		
 		// If We Get Here We have a Miss
 		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
+		cacheController.cacheStats.WRITE_MISS++;
 		Integer mAddress = getNextWriteLocation(eAddress);
 		//Write Back If Necessary
 		if(memory[mAddress] != null)writeBack(mAddress);
@@ -259,6 +265,7 @@ public class Cache {
 			if(memory[mAddress] != null){
 				if(memory[mAddress].getBlockAddress().equals(block.getBlockAddress())){
 					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
+					cacheController.cacheStats.BLOCKWRITE_HIT++;
 					// Adjust loadQueue
 					memory[mAddress] = block;
 					return;
@@ -270,6 +277,7 @@ public class Cache {
 		
 		// If We Get Here We have a Miss
 		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
+		cacheController.cacheStats.BLOCKWRITE_MISS++;
 		Integer mAddress = getNextWriteLocation(block.getBlockAddress());
 		//Write Back If Necessary
 		if(memory[mAddress] != null)writeBack(mAddress);

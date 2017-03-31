@@ -105,6 +105,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		if(memory[mAddress] == null){
 			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + mAddress + "] MISS, Creating MemoryBlock");
 			
+			cacheStats.BLOCKREAD_MISS++;
+			
 			MemoryBlock newMB = new MemoryBlock(blockSize, address);
 			
 			for(int i = 0; i < blockSize; i++){
@@ -115,10 +117,10 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 			memory[mAddress] = newMB;
 		}else{
 			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + address + "] HIT");
+			cacheStats.BLOCKREAD_HIT++;
 		}
 		
 		cacheStats.ACCESS++;
-		cacheStats.BLOCKREAD++;
 		
 		MemoryBlock newMB = memory[mAddress].clone();
 		
@@ -142,7 +144,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		memory[memoryBlock] = block;
 		
 		cacheStats.ACCESS++;
-		cacheStats.BLOCKWRITE++;
+		cacheStats.BLOCKWRITE_HIT++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning True");
 		return true;
