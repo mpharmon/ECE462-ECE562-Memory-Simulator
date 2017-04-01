@@ -12,7 +12,7 @@ public class Program{
 	
 	protected static Memory M1;
 	
-	public static final void main(String[] args) throws InterruptedException{
+	public static void main(String[] args) throws InterruptedException{
 		Run();
 	}
 	
