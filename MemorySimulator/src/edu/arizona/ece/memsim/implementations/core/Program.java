@@ -8,15 +8,15 @@ import java.util.Random;
 
 public class Program{
 	
-	private static CacheController L1, L2;
+	protected static CacheController L1, L2;
 	
-	private static Memory mem;
+	protected static Memory M1;
 	
-	public static void main(String[] args) throws InterruptedException{
+	public static final void main(String[] args) throws InterruptedException{
 		Run();
 	}
 	
-	public static void Run() throws InterruptedException{
+	public static final void Run() throws InterruptedException{
 		try {
 			Reset();
 			SequentialAccess();
@@ -27,7 +27,7 @@ public class Program{
 		}
 	}
 	
-	public static void RandomAccess() throws Exception{
+	public static final void RandomAccess() throws Exception{
 		System.out.println("Running Random Memory Access");
 		Random rand = new Random();
 		for(int i = 0; i < 16777216; i++){
@@ -43,14 +43,14 @@ public class Program{
 		}
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
-		printStats("M1", mem.getMemoryStats());
+		printStats("M1", M1.getMemoryStats());
 	}
 	
-	public void StrideAccess(){
+	public static final void StrideAccess(){
 		// TODO: Implement
 	}
 	
-	public static void SequentialAccess() throws Exception{
+	public static final void SequentialAccess() throws Exception{
 		System.out.println("Running Sequential Memory Access");
 		Random rand = new Random();
 		for(int i = 0; i < 16777216; i++){
@@ -65,20 +65,21 @@ public class Program{
 		}
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
-		printStats("M1", mem.getMemoryStats());
+		printStats("M1", M1.getMemoryStats());
 	}
 	
 	protected static void Reset() throws Exception{
 		// Currently Block Sizes Must Be EQUAL Among all Cache Level(s) and Memory
-		mem = null;
-		mem = new Memory(134217728, 64, 200);// 128MB, 64B Block, 200 Cycle Access
+		M1 = null;
+		M1 = new Memory(134217728, 64, 200);// 128MB, 64B Block, 200 Cycle Access
+		//M1 = new Memory(134217728, 200);// 128MB, 200 Cycle Access
 		L2 = null;
-		L2 = new CacheController(2, 131072, 64, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access
+		L2 = new CacheController(2, 131072, 64, 16, 20, M1);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access
 		L1 = null;
 		L1 = new CacheController(1, 8192, 64, 0, 1, L2);// 8KB, 64B Block, Fully Associative, 1 Cycle Access
 	}
 	
-	protected static void printStats(String prefix, CacheStatistics stats){
+	protected static final void printStats(String prefix, CacheStatistics stats){
 		System.out.println(prefix + ".ACCESSES\t\t" + stats.ACCESS);
 		System.out.println(prefix + ".READ_TOTAL\t\t" + (stats.READ_HIT + stats.READ_MISS));
 		System.out.println(prefix + ".READ_HITS\t\t" + stats.READ_HIT);
