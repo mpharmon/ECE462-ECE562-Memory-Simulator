@@ -8,9 +8,9 @@ import java.util.Random;
 
 public class Program{
 	
-	private static CacheController L1, L2;
+	protected static CacheController L1, L2;
 	
-	private static Memory mem;
+	protected static Memory mem;
 	
 	public static void main(String[] args) throws InterruptedException{
 		Run();
