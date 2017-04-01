@@ -31,7 +31,7 @@ public class MemoryElement {
 	 */
 	public MemoryElement(Integer address, Byte bite){
 		this(address);
-		this.data = bite;
+		data = bite;
 	}
 	
 	/**

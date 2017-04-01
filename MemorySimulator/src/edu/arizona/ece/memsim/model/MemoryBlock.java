@@ -174,4 +174,12 @@ public class MemoryBlock implements Cloneable{
 		
 		return newBlock;
 	}
+
+	public MemoryElementIterator getIterator(){
+		return new MemoryElementIterator(this);
+	}
+	
+	public Integer getSize(){
+		return blockSize;
+	}
 }
