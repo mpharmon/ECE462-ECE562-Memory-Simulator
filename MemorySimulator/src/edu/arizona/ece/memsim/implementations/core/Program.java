@@ -19,9 +19,11 @@ public class Program{
 	public static void Run() throws InterruptedException{
 		try {
 			Reset();
-			SequentialAccess();
-			Reset();
-			RandomAccess();
+			BasicSequentialAccess(); 
+			//Commented for testing trivial case
+			//SequentialAccess();
+			//Reset();
+			//RandomAccess();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -62,6 +64,18 @@ public class Program{
 			}else{
 				throw new Exception("Random Gave Value other than 0 or 1");
 			}
+		}
+		printStats("L1", L1.getCacheStats());
+		printStats("L2", L2.getCacheStats());
+		printStats("M1", mem.getMemoryStats());
+	}
+	//Verifying Hits for perfect memory pattern
+	public static void BasicSequentialAccess() throws Exception{
+		System.out.println("Running Basic Sequential Memory Access");
+		Random rand = new Random();
+		for(int i = 0; i < 16777216; i++){
+			L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+			L1.get(i);
 		}
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
