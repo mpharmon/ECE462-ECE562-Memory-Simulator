@@ -18,10 +18,10 @@ public class Program{
 	
 	public static void Run() throws InterruptedException{
 		try {
-			Reset();
-			BasicSequentialAccess(); 
+			//Reset();
+			//BasicSequentialAccess(); 
 			//Commented for testing trivial case
-			//SequentialAccess();
+			 SequentialAccess();
 			//Reset();
 			//RandomAccess();
 		} catch (Exception e) {
