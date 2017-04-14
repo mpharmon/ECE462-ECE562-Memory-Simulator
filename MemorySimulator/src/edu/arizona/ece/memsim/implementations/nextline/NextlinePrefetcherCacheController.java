@@ -33,7 +33,7 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		MemoryResult returnValue = new MemoryResult();
 		
 		returnValue.addMemoryElement(cache.get(eAddress));
-		cache.get(eAddress + 1);
+		//cache.get(eAddress + 1);
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		

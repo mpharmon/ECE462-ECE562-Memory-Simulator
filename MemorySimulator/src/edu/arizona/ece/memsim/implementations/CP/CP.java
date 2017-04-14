@@ -1,4 +1,4 @@
-package edu.arizona.ece.memsim.implementations.core;
+package edu.arizona.ece.memsim.implementations.CP;
 
 import java.util.Random;
 
@@ -6,37 +6,53 @@ import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.CacheStatistics;
 import edu.arizona.ece.memsim.model.Memory;
 
-
-public class Program{
+//public class CP extends Program {
+public class CP  {	
 	
 	protected static CacheController L1, L2;
-	
 	protected static Memory mem;
-	
+	/*public CP(CacheController L1,CacheController L2,Memory mem){//constructor
+		L1 = L1; 
+	}
+	*/
 	public static void main(String[] args) throws InterruptedException{
 		Run();
 		System.exit(0);
 	}
+	public Memory getmem(){
+		return mem;
+	}
+	public CacheController getCache1(){
+		return L1;
+	}
+	public CacheController getCache2(){
+		return L2;
+	}
+	
 	
 	public static void Run() throws InterruptedException{
 		try {
-			//Reset();// you no longer need to reset as long as the prefetching algorith reset it and prefetched the values 
-
+			Reset();// you no longer need to reset as long as the prefetching algorith reset it and prefetched the values 
 			BasicSequentialAccess(); 
-			//Commented for testing trivial case
-		//	SequentialAccess();
-		//	Reset();
 
-			
-			
-			//SequentialAccess();
-			//RandomAccess();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return;
 	}
 	
+	public static void Reset() throws Exception{
+		mem = null;
+		//mem = new Memory(134217728, 64, 200);// 128MB, 64B Block, 200 Cycle Access
+		mem = new Memory(131072, 64, 200);// 128KB, 64B Block, 200 Cycle Access //************************** For debugging
+		L2 = null;//Cache controller to keep it consistent for the prefetching on L1 cache 
+		L2 = new CacheController(2, 131072, 64, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access
+		L1 = null; // fully asocciative is 1
+		L1 = new ProgramPatternController(1, 8192, 64, 1, 1, mem);// 8KB, 64B Block, Fully associative, 1 Cycle Access
+	}	
+
+
+
 	//Verifying Hits for perfect memory pattern
 	public static void BasicSequentialAccess() throws Exception{
 		System.out.println("Running Basic Sequential Memory Access");
@@ -98,16 +114,6 @@ public class Program{
 		printStats("M1", mem.getMemoryStats());
 	}
 
-	protected static void Reset() throws Exception{
-		// Currently Block Sizes Must Be EQUAL Among all Cache Level(s) and Memory
-		mem = null;
-		//mem = new Memory(134217728, 64, 200);// 128MB, 64B Block, 200 Cycle Access
-		mem = new Memory(131072, 64, 200);// 128KB, 64B Block, 200 Cycle Access //************************** For debugging
-		L2 = null;
-		L2 = new CacheController(2, 131072, 64, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access
-		L1 = null; // one is fully asociative in cache.java
-		L1 = new CacheController(1, 8192, 64, 1, 1, mem);// 8KB, 64B Block, Fully associative , 1 Cycle Access
-	}
 	
 	protected static void printStats(String prefix, CacheStatistics stats){
 		System.out.println(prefix + ".ACCESSES\t\t" + stats.ACCESS);
@@ -126,4 +132,5 @@ public class Program{
 		System.out.println(prefix + ".REPLACEMENTS\t\t" + stats.REPLACEMENT);
 		System.out.println(prefix + ".INVALIDATES\t\t" + stats.INVALIDATE);
 	}
+
 }

@@ -53,10 +53,8 @@ public class MemoryBlock implements Cloneable{
 	 */
 	public MemoryBlock(Integer size, Integer address){
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache(" + size + ", " + address + ")");
-		
 		if(size == null)throw new NullPointerException("size Can Not Be Null");
 		if(size < 1)throw new IllegalArgumentException("size Must Be Greater Than Zero");
-		
 		if(address == null)throw new NullPointerException("number Can Not Be Null");
 		if(address < 0)throw new IllegalArgumentException("number Must Be Positive or Zero");
 		
@@ -73,10 +71,8 @@ public class MemoryBlock implements Cloneable{
 	 * @return Integer Address of the MemoryBlock
 	 */
 	public Integer getBlockAddress(){
-		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getBlockAddress()");
-		
-		if(DEBUG_LEVEL >= 5)System.out.println("...Returning " + blockAddress);
-		
+		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getBlockAddress()");	
+		if(DEBUG_LEVEL >= 5)System.out.println("...Returning " + blockAddress);	
 		return blockAddress;
 	}
 	
@@ -87,10 +83,8 @@ public class MemoryBlock implements Cloneable{
 	 * @return MemoryElement At address
 	 */
 	public MemoryElement getElement(Integer offset){
-		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getElement(" + offset + ")");
-		
+		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getElement(" + offset + ")");	
 		if(offset == null)throw new NullPointerException("address Can Not Be Null");
-		
 		if(offset < blockSize){
 			if(DEBUG_LEVEL >= 5)System.out.println("...Returning " + memory[offset]);
 			return memory[offset];

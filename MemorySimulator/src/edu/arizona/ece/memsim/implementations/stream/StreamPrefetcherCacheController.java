@@ -41,7 +41,6 @@ public class StreamPrefetcherCacheController extends CacheController {
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
 		cacheStats.ACCESS++;
-		//cacheStats.READ++;
 		
 		return returnValue;
 	}

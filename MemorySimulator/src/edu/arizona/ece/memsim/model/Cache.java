@@ -134,11 +134,10 @@ public class Cache {
 	 */
 	public MemoryElement get(Integer eAddress) throws IllegalAccessException, NullPointerException{
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.get(" + eAddress + ")");
-		
 		// Validation
 		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
 		if(eAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Be Positive (Given " + eAddress);
-		
+
 		Integer bAddress = eAddress / blockSize;
 		Integer offset = eAddress % blockSize;
 		
@@ -180,7 +179,7 @@ public class Cache {
 		// Cache Hit?
 		for(Integer mAddress : getPossibleMemoryAddressArray(bAddress)){
 			if(DEBUG_LEVEL >= 3)System.out.print("...Looking in Memory[" + mAddress + "] for bAddress " + bAddress);
-			if(memory[mAddress] != null){
+			if(memory[mAddress] != null){  
 				if(memory[mAddress].getBlockAddress().equals(bAddress)){
 					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
 					cacheController.cacheStats.BLOCKREAD_HIT++;
@@ -215,15 +214,13 @@ public class Cache {
 	 */
 	public void put(Integer eAddress, Byte bite) throws NullPointerException, IndexOutOfBoundsException, IllegalAccessException{
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.put(" + eAddress + ", " + bite + ")");
-	
 		// Validation
 		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
 		if(eAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Positive");
-		
 		if(bite == null)throw new NullPointerException("bite Can Not Be NULL");
 		
-		Integer bAddress = eAddress / blockSize * blockSize;
-		Integer offset = eAddress % blockSize;
+		Integer bAddress = eAddress / blockSize; // the value above just have you eddress+1 , what i think what baddress should do is divide the address 
+		Integer offset = eAddress % blockSize; // cache offset is to find the data within the block 
 		
 		// Cache Hit?
 		for(Integer mAddress : getPossibleMemoryAddressArray(eAddress)){
@@ -241,7 +238,7 @@ public class Cache {
 			if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
 		}
 		
-		// If We Get Here We have a Miss
+		// If We Get Here We have a write Miss that means that the block is not in the cache
 		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
 		cacheController.cacheStats.WRITE_MISS++;
 		Integer mAddress = getNextWriteLocation(eAddress);
@@ -252,6 +249,42 @@ public class Cache {
 		//Update Value
 		memory[mAddress].getElement(offset).setData(bite);
 	}
+	
+	
+	/*
+	 * Sets aprefetch block without affecting the stats
+	 * */
+	public void putPrefetch(Integer eAddress, Byte bite) throws NullPointerException, IndexOutOfBoundsException, IllegalAccessException{
+		if(DEBUG_LEVEL >= 1)System.out.println("Cache.put(" + eAddress + ", " + bite + ")");
+		// Validation
+		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
+		if(eAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Positive");
+		if(bite == null)throw new NullPointerException("bite Can Not Be NULL");
+		
+		Integer bAddress = eAddress / blockSize;
+		Integer offset = eAddress % blockSize; // cache offset is to find the data within the block 
+		// to prefetch we first check if the parent has the memory
+		for(Integer mAddress : getPossibleMemoryAddressArray(eAddress)){
+			if(memory[mAddress] != null){ //we already have the memory at the cache 
+				if(memory[mAddress].getBlockAddress() == bAddress ){	
+						// Adjust loadQueue
+						memory[mAddress].getElement(offset).setData(bite); 
+						return;
+				}
+			}
+		}
+		
+		// prefetch if is not there 
+
+		Integer mAddress = getNextWriteLocation(eAddress);
+		//Write Back If Necessary
+		if(memory[mAddress] != null)writeBack(mAddress);
+		//Resolve Miss
+		resolveMiss(mAddress, eAddress);
+		//Update Value
+		memory[mAddress].getElement(offset).setData(bite);
+	}
+	
 	
 	public void putBlock(MemoryBlock block) throws IllegalAccessException, NullPointerException{
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.putBlock(" + block.getBlockAddress() + ")");
@@ -287,19 +320,26 @@ public class Cache {
 		memory[mAddress] = block;
 	}
 	
+		public Integer getAssoc(){
+			return wayRows;
+		}
+		public Integer getBlockSize(){
+			return blockSize;
+		}
+	
 	private Integer[] getPossibleMemoryAddressArray(Integer address){
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.getPossibleMemoryAddressArray(" + address + ")");
 		Integer[] returnArray = new Integer[wayRows];
 		if(associativity == 0){// Direct Mapped Cache
-			if(DEBUG_LEVEL >= 3)System.out.print("...Direct Mapped Cache, Only 1 Possible Location: ");
-			returnArray[0] = (address & ((totalSize / blockSize - 1) << offsetShift)) >> offsetShift;
-			if(DEBUG_LEVEL >= 4)System.out.println(returnArray[0]);
+				if(DEBUG_LEVEL >= 3)System.out.print("...Direct Mapped Cache, Only 1 Possible Location: ");
+				returnArray[0] = (address & ((totalSize / blockSize - 1) << offsetShift)) >> offsetShift;
+				if(DEBUG_LEVEL >= 4)System.out.println(returnArray[0]);
 		}else if(associativity == 1){// Fully Associative Cache
-			if(DEBUG_LEVEL >= 3)System.out.print("...Fully Associatve Cache, " + wayRows + " Possible Locations");
-			for(int i = 0; i < wayRows; i++){
-				returnArray[i] = i;
-				if(DEBUG_LEVEL >= 4)System.out.println("..." + i);
-			}
+				if(DEBUG_LEVEL >= 3)System.out.print("...Fully Associatve Cache, " + wayRows + " Possible Locations");
+				for(int i = 0; i < wayRows; i++){
+					returnArray[i] = i;
+					if(DEBUG_LEVEL >= 4)System.out.println("..." + i);
+				}
 		}else{// Set Associative Cache
 			Integer set = (address & ((associativity - 1) << offsetShift)) >> offsetShift;
 			Integer setSize = totalSize / blockSize / associativity;
@@ -334,9 +374,9 @@ public class Cache {
 		
 		MemoryBlock block;
 		
-		if(cacheController.parentMemory != null){
+		if(cacheController.parentMemory != null){ //if the parent memory is not null
 			if(DEBUG_LEVEL >= 3)System.out.println("...Getting From Parent Memory");
-			block = cacheController.parentMemory.getBlock(address);
+			block = cacheController.parentMemory.getBlock(address); //the address of the block was 1024 but when the block was gotten it has addres 16 
 			if(DEBUG_LEVEL >= 4)System.out.println("Cache.resolveMiss(" + address + ")\n...Got " + block + ")");
 		}else if(cacheController.parentCache != null){
 			if(DEBUG_LEVEL >= 3)System.out.println("...Getting From Parent Cache");
@@ -356,17 +396,18 @@ public class Cache {
 	
 	private void writeBack(Integer mAddress) throws IllegalAccessException, NullPointerException{
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.writeBack(" + mAddress + ")");
-		
-		if(cacheController.parentMemory != null){
+		if(cacheController.parentMemory != null ){ //when we replace a block on the cache with information we replace it back to main memory
+			//if(cacheController.parentMemory.accessTime != 200){
 			cacheController.parentMemory.putBlock(memory[mAddress].clone());
+			//}
 		}else if(cacheController.parentCache != null){
+			//if(cacheController.parentCache.accessTime != 200){
 			cacheController.parentCache.putBlock(memory[mAddress].clone());
+			
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
-		
-		cacheController.cacheStats.REPLACEMENT++;
-		
+		cacheController.cacheStats.REPLACEMENT++;	
 		memory[mAddress] = null;
 	}
 }

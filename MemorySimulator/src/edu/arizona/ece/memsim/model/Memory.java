@@ -61,34 +61,38 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 */
 	public Memory(Integer tSize, Integer bSize, Integer aTime){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory(" + tSize + ", " + bSize +", " + aTime + ")");
-		
 		// Validity Checking
 		if(tSize == null)throw new NullPointerException("tSize Can Not Be Null");
-		if(tSize < 0)throw new IllegalArgumentException("tSize Must Be Greater Than Zero");
-		
+		if(tSize < 0)throw new IllegalArgumentException("tSize Must Be Greater Than Zero");	
 		if(bSize == null)throw new NullPointerException("tSize Can Not Be Null");
-		if(bSize < 0)throw new IllegalArgumentException("bSize Must Be Greater Than Zero");
-		
+		if(bSize < 0)throw new IllegalArgumentException("bSize Must Be Greater Than Zero");	
 		if(aTime == null)throw new NullPointerException("aTime Can Not Be Null");
 		if(aTime < 0)throw new IllegalArgumentException("aTime Must Be Greater Than Zero");
 		
 		blockSize = bSize;
 		accessTime = aTime;
-		
 		// Check blockSize vs. totalSize
-		if(tSize % blockSize != 0)throw new ArrayIndexOutOfBoundsException("Block Size Not Aligned with Total Size");
-		
+		if(tSize % blockSize != 0)throw new ArrayIndexOutOfBoundsException("Block Size Not Aligned with Total Size");	
 		Integer numBlocks = tSize / bSize;
 		if(DEBUG_LEVEL >= 3)System.out.println("Creating memory[" + numBlocks + "]");
-		memory = new MemoryBlock[numBlocks];
-		
+		memory = new MemoryBlock[numBlocks];	
 		childCaches = new ArrayList<CacheController>();
-		
 		cacheStats = new CacheStatistics();
-		
+		// Initializing the memory is necessary, because when you populate the cache L1 directly from memory for debuging its sees null therefore thinks we got a miss 
+		// The logic of null checking the the parent cache works perfectly when you have L2 cache as the parent and then it populates the parent cache L2 
+		MemPopulate(numBlocks);// for debugging with only L1 cache 
 		if(DEBUG_LEVEL >= 2)System.out.println("Memory() Finished");
 	}
-	
+	public void MemPopulate(Integer NumBlocks){
+		for(int j = 0;j <NumBlocks;j++){
+			MemoryBlock newMB = new MemoryBlock(blockSize, j); // creates new memory block
+			for(int i = 0; i < blockSize; i++){ // populate the new memory block
+				if(DEBUG_LEVEL >= 4)System.out.println("...Creating MemoryElement(" + i + ", 0)");
+				newMB.setElement(i, new MemoryElement(i, (byte)0)); 
+			}
+			memory[j] = newMB;
+		}
+	}
 	/**
 	 * Gets a Block of Memory
 	 * 
@@ -99,33 +103,24 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.getBlock(" + address + ")");
 		if(address == null)throw new NullPointerException("bAddress Can Not Be Null");
 		if(address < 0)throw new ArrayIndexOutOfBoundsException("bAddress Must Be Positive");
-		
 		Integer mAddress = address / blockSize;
 		
-		if(memory[mAddress] == null){
-			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + mAddress + "] MISS, Creating MemoryBlock");
-			
-			cacheStats.BLOCKREAD_MISS++;
-			
-			MemoryBlock newMB = new MemoryBlock(blockSize, address);
-			
-			for(int i = 0; i < blockSize; i++){
+		if(memory[mAddress] == null){ // this populates the whole block if the parent block is null,that could imply two things one L1 parent L2 cache is NUll or L2 parent Main mem is NULL
+			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + mAddress + "] MISS, Creating MemoryBlock");	
+			cacheStats.BLOCKREAD_MISS++;		
+			MemoryBlock newMB = new MemoryBlock(blockSize, address); // creates new memory block
+			for(int i = 0; i < blockSize; i++){ // populate the new memory block
 				if(DEBUG_LEVEL >= 4)System.out.println("...Creating MemoryElement(" + i + ", 0)");
 				newMB.setElement(i, new MemoryElement(i, (byte)0));
 			}
-			
 			memory[mAddress] = newMB;
 		}else{
 			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + address + "] HIT");
 			cacheStats.BLOCKREAD_HIT++;
-		}
-		
-		cacheStats.ACCESS++;
-		
+		}	
+		cacheStats.ACCESS++;	
 		MemoryBlock newMB = memory[mAddress].clone();
-		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + newMB + ")");
-		
 		return newMB;
 	}
 	
@@ -165,23 +160,17 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 
 	@Override
 	public boolean registerChildCache(CacheController cacheController) {
-		if(DEBUG_LEVEL >= 1)System.out.println("Memory.registerChildCache(CacheController)");
-		
-		if(cacheController == null)throw new NullPointerException("cacheController Can Not Be Null");
-		
+		if(DEBUG_LEVEL >= 1)System.out.println("Memory.registerChildCache(CacheController)");	
+		if(cacheController == null)throw new NullPointerException("cacheController Can Not Be Null");	
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
-		
 		return childCaches.add(cacheController);
 	}
 
 	@Override
 	public boolean unRegisterChildCache(CacheController cacheController) {
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.unRegisterChildCache(CacheController)");
-		
 		if(cacheController == null)throw new NullPointerException("cacheController Can Not Be Null");
-		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
-		
 		return childCaches.remove(cacheController);
 	}
 
