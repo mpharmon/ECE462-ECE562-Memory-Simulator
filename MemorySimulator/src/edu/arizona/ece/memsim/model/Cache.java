@@ -397,13 +397,9 @@ public class Cache {
 	private void writeBack(Integer mAddress) throws IllegalAccessException, NullPointerException{
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.writeBack(" + mAddress + ")");
 		if(cacheController.parentMemory != null ){ //when we replace a block on the cache with information we replace it back to main memory
-			//if(cacheController.parentMemory.accessTime != 200){
 			cacheController.parentMemory.putBlock(memory[mAddress].clone());
-			//}
 		}else if(cacheController.parentCache != null){
-			//if(cacheController.parentCache.accessTime != 200){
 			cacheController.parentCache.putBlock(memory[mAddress].clone());
-			
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
