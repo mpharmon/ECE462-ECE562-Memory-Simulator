@@ -20,9 +20,7 @@ public class Program{
 	
 	public static void Run() throws InterruptedException{
 		try {
-<<<<<<< HEAD
-<<<<<<< HEAD
-			//Reset();// you no longer need to reset as long as the prefetching algorith reset it and prefetched the values 
+			Reset();// you no longer need to reset as long as the prefetching algorith reset it and prefetched the values 
 
 			BasicSequentialAccess(); 
 			//Commented for testing trivial case
@@ -30,22 +28,6 @@ public class Program{
 		//	Reset();
 
 			
-			
-			//SequentialAccess();
-=======
-=======
-			//Reset();
-			//BasicSequentialAccess(); 
-			//Commented for testing trivial case
-			 SequentialAccess();
->>>>>>> 31af15d37264bbf9c1482d94513f2246d1e8c7a2
-			//Reset();
-			//BasicSequentialAccess(); 
-			//Commented for testing trivial case
-			 SequentialAccess();
-			//Reset();
->>>>>>> 31af15d37264bbf9c1482d94513f2246d1e8c7a2
-			//RandomAccess();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
