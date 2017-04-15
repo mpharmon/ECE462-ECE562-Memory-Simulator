@@ -162,7 +162,7 @@ public class Cache {
 		//Write Back If Necessary
 		if(memory[mAddress] != null)writeBack(mAddress);
 		//Resolve Miss
-		resolveMiss(mAddress, bAddress);// mad=0,bad=1024
+		resolveMiss(mAddress, bAddress*blockSize);// mad=0,bad=1024
 		//Return Value
 		MemoryElement mElement = memory[mAddress].getElement(offset);
 		if(DEBUG_LEVEL >= 2)System.out.println("Returning MemoryElement " + mElement);
@@ -198,7 +198,8 @@ public class Cache {
 		//Write Back If Necessary
 		if(memory[mAddress] != null)writeBack(mAddress);
 		//Resolve Miss
-		resolveMiss(mAddress, bAddress);
+		//resolveMiss(mAddress, bAddress); // resolve miss uses the total address
+		resolveMiss(mAddress, bAddress*blockSize);
 		//Return Value
 		return memory[mAddress].clone();
 	}

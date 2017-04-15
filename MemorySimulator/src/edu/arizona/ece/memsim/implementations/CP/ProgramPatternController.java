@@ -177,10 +177,12 @@ public class ProgramPatternController extends CacheController {
      	Integer bAddress = eAddress / line;
 		Integer offset	 = eAddress % line; 
      	if(offset == (line-2)){
-	    	for (int i = (bAddress+1)*line ; (i < 8*line+((bAddress+1)*line))&&(i < 8*size); i=i+line){
+	    	for (int i = (bAddress+1)*line ; (i < (8*line+((bAddress+1)*line)))&&(i < 16*size); i=i+line){
 	    		if(j < 10){
-				address[j] = i/line;  
-				j++;
+			//	address[j] = i/line;  
+				address[j] = i;  
+
+	    		j++;
 	    		}
 			}
      	}
