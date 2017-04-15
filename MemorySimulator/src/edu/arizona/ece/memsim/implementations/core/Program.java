@@ -21,8 +21,8 @@ public class Program{
 	public static void Run() throws InterruptedException{
 		try {
 			Reset();// you no longer need to reset as long as the prefetching algorith reset it and prefetched the values 
-
-			BasicSequentialAccess(); 
+			SequentialAccess();
+			//BasicSequentialAccess(); 
 			//Commented for testing trivial case
 		//	SequentialAccess();
 		//	Reset();
@@ -57,9 +57,12 @@ public class Program{
 	public static void RandomAccess() throws Exception{
 		System.out.println("Running Random Memory Access");
 		Random rand = new Random();
-		for(int i = 0; i < 16777216; i++){
+//		for(int i = 0; i < 16777216; i++){
+		for(int i = 0; i < 131072; i++){
 			Integer rw = rand.nextInt(2);
-			Integer pos = rand.nextInt(16777217);
+			//Integer pos = rand.nextInt(16777217);
+			Integer pos = rand.nextInt(131072);
+
 			if(rw == 0){// Read
 				L1.get(pos);
 			}else if(rw == 1){
@@ -80,7 +83,8 @@ public class Program{
 	public static void SequentialAccess() throws Exception{
 		System.out.println("Running Sequential Memory Access");
 		Random rand = new Random();
-		for(int i = 0; i < 16777216; i++){
+		//for(int i = 0; i < 16777216; i++){
+		for(int i = 0; i < 131072; i++){
 			Integer rw = rand.nextInt(2);
 			if(rw == 0){// Read
 				L1.get(i);

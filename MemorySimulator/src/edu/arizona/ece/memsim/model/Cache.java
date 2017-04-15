@@ -162,7 +162,7 @@ public class Cache {
 		//Write Back If Necessary
 		if(memory[mAddress] != null)writeBack(mAddress);
 		//Resolve Miss
-		resolveMiss(mAddress, bAddress);
+		resolveMiss(mAddress, bAddress);// mad=0,bad=1024
 		//Return Value
 		MemoryElement mElement = memory[mAddress].getElement(offset);
 		if(DEBUG_LEVEL >= 2)System.out.println("Returning MemoryElement " + mElement);
@@ -386,7 +386,7 @@ public class Cache {
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
 		
-		if(memory[mAddress] == null){
+		if(memory[mAddress] == null){//if the temp is not populated 
 			if(DEBUG_LEVEL >= 4)System.out.println("...Setting memory[" + mAddress + "] to " + block);
 			memory[mAddress] = block;
 		}else{

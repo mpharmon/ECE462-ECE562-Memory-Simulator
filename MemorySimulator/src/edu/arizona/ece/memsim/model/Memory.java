@@ -103,26 +103,32 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.getBlock(" + address + ")");
 		if(address == null)throw new NullPointerException("bAddress Can Not Be Null");
 		if(address < 0)throw new ArrayIndexOutOfBoundsException("bAddress Must Be Positive");
-		Integer mAddress = address / blockSize;
-		
-		if(memory[mAddress] == null){ // this populates the whole block if the parent block is null,that could imply two things one L1 parent L2 cache is NUll or L2 parent Main mem is NULL
-			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + mAddress + "] MISS, Creating MemoryBlock");	
-			cacheStats.BLOCKREAD_MISS++;		
-			MemoryBlock newMB = new MemoryBlock(blockSize, address); // creates new memory block
-			for(int i = 0; i < blockSize; i++){ // populate the new memory block
-				if(DEBUG_LEVEL >= 4)System.out.println("...Creating MemoryElement(" + i + ", 0)");
-				newMB.setElement(i, new MemoryElement(i, (byte)0));
-			}
-			memory[mAddress] = newMB;
-		}else{
-			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + address + "] HIT");
-			cacheStats.BLOCKREAD_HIT++;
-		}	
-		cacheStats.ACCESS++;	
-		MemoryBlock newMB = memory[mAddress].clone();
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + newMB + ")");
+		//Integer mAddress = address / blockSize;
+		Integer mAddress = address ;
+		Integer size = memory.length ;
+		if(mAddress < size){
+			if(memory[mAddress] == null){ // this populates the whole block if the parent block is null,that could imply two things one L1 parent L2 cache is NUll or L2 parent Main mem is NULL
+				if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + mAddress + "] MISS, Creating MemoryBlock");	
+				cacheStats.BLOCKREAD_MISS++;		
+				MemoryBlock newMB = new MemoryBlock(blockSize, address); // creates new memory block
+				for(int i = 0; i < blockSize; i++){ // populate the new memory block
+					if(DEBUG_LEVEL >= 4)System.out.println("...Creating MemoryElement(" + i + ", 0)");
+					newMB.setElement(i, new MemoryElement(i, (byte)0));
+				}
+				memory[mAddress] = newMB;
+			}else{
+				if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + address + "] HIT");
+				cacheStats.BLOCKREAD_HIT++;
+			}	
+				cacheStats.ACCESS++;	
+				MemoryBlock newMB = memory[mAddress].clone();
+				if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + newMB + ")");
+				return newMB;
+		}
+		MemoryBlock newMB = memory[0].clone();
 		return newMB;
 	}
+	
 	
 	/**
 	 * Updates a MemoryBlock in Memory
@@ -130,12 +136,13 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param block The MemoryBlock being written
 	 * @return boolean If the memory block was written true, otherwise false
 	 */
-	public boolean putBlock(MemoryBlock block){
+	public boolean putBlock(MemoryBlock block){ // here it modifies main memory block
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.putBlock(" + block.getBlockAddress() + ")");
 		if(block == null)throw new NullPointerException("block Can Not Be Null");
 		
-		Integer memoryBlock = block.getBlockAddress() / blockSize;
-		
+		//Integer memoryBlock = block.getBlockAddress() / blockSize;
+		Integer memoryBlock = block.getBlockAddress() ; // the Block address is already the correct one 
+
 		memory[memoryBlock] = block;
 		
 		cacheStats.ACCESS++;

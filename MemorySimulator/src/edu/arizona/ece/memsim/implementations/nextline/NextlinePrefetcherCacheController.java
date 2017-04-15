@@ -34,7 +34,9 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		
 		returnValue.addMemoryElement(cache.get(eAddress));
 		//cache.get(eAddress + 1);
-		
+		if(eAddress != (8*cache.getAssoc()*cache.getBlockSize())-1){
+			cache.put(eAddress+1,(byte)(0));
+		}
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
 		cacheStats.ACCESS++;
@@ -64,6 +66,7 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		
 		MemoryBlock returnValue = cache.getBlock(bAddress);
 		
+
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
