@@ -32,9 +32,10 @@ public class CP  {
 	
 	public static void Run() throws InterruptedException{
 		try {
-			Reset();// you no longer need to reset as long as the prefetching algorith reset it and prefetched the values 
-			BasicSequentialAccess(); 
-
+			//Reset();// you no longer need to reset as long as the prefetching algorith reset it and prefetched the values 
+			//BasicSequentialAccess(); 
+			Reset();
+			RandomAccess();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -55,17 +56,9 @@ public class CP  {
 
 	//Verifying Hits for perfect memory pattern
 	public static void BasicSequentialAccess() throws Exception{
-		System.out.println("Running Basic Sequential Memory Access");
-		Random rand = new Random();
-		/*
-		for(int i = 0; i < 16777216; i++){
-			L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
-			L1.get(i);
-		}
-		*/
-		//For debugging on small memory incialiazed
-		for(int i = 0; i < 131072; i++){
-			L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+		System.out.println("Running Perfect Sequential Memory Access");
+		//For debugging perfect if you prefetech the next block always
+		for(int i = 0; i < mem.getMemorySize(); i++){
 			L1.get(i);
 		}
 		printStats("L1", L1.getCacheStats());
@@ -76,35 +69,42 @@ public class CP  {
 	public static void RandomAccess() throws Exception{
 		System.out.println("Running Random Memory Access");
 		Random rand = new Random();
-		for(int i = 0; i < 16777216; i++){
-			Integer rw = rand.nextInt(2);
-			Integer pos = rand.nextInt(16777217);
-			if(rw == 0){// Read
+		for(int i = 0; i < mem.getMemorySize() ; i++){
+				Integer pos = rand.nextInt(mem.getMemorySize());
 				L1.get(pos);
-			}else if(rw == 1){
-				L1.put(pos, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
-			}else{
-				throw new Exception("Random Gave Value other than 0 or 1");
 			}
+		printStats("L1", L1.getCacheStats());
+		printStats("L2", L2.getCacheStats());
+		printStats("M1", mem.getMemoryStats());
+	}
+	
+	public void StrideAccess() throws NullPointerException, IllegalArgumentException, IllegalAccessException{
+		System.out.println("Running Stride Memory Access");
+		Random rand = new Random();
+		for(int i = 0; i < mem.getMemorySize() ; i++){
+			Integer length = rand.nextInt((mem.getMemorySize()/64));
+			Integer pos = rand.nextInt(mem.getMemorySize());
+			Integer max = pos+length ;
+			while (pos != max){
+				L1.get(pos);
+				pos =+ 1;
+			}
+			i = i+pos-1;
 		}
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
 		printStats("M1", mem.getMemoryStats());
 	}
 	
-	public void StrideAccess(){
-		// TODO: Implement
-	}
-	
 	public static void SequentialAccess() throws Exception{
 		System.out.println("Running Sequential Memory Access");
 		Random rand = new Random();
-		for(int i = 0; i < 16777216; i++){
+		for(int i = 0; i < mem.getMemorySize() ; i++){
 			Integer rw = rand.nextInt(2);
 			if(rw == 0){// Read
 				L1.get(i);
 			}else if(rw == 1){
-				L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+				
 			}else{
 				throw new Exception("Random Gave Value other than 0 or 1");
 			}

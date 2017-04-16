@@ -327,7 +327,9 @@ public class Cache {
 		public Integer getBlockSize(){
 			return blockSize;
 		}
-	
+		public CacheController getCacheController(){
+			return cacheController;
+		}
 	private Integer[] getPossibleMemoryAddressArray(Integer address){
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.getPossibleMemoryAddressArray(" + address + ")");
 		Integer[] returnArray = new Integer[wayRows];
@@ -407,4 +409,5 @@ public class Cache {
 		cacheController.cacheStats.REPLACEMENT++;	
 		memory[mAddress] = null;
 	}
+	
 }

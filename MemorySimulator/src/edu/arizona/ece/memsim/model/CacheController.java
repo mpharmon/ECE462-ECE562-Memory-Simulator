@@ -335,4 +335,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	public CacheStatistics getCacheStats(){
 		return cacheStats;
 	}
+	public Memory getParentMem(){
+		return parentMemory;
+	}
 }

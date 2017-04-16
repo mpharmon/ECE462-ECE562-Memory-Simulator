@@ -10,9 +10,18 @@ import java.util.Random;  // for the random function
 
 public class ProgramPatternController extends CacheController {
 	
+	private String[] State; // this keeps track of the pattern state whatever pattern is following 
+	
+	public int[] Hits = new int[100]; //Keeps track of the  previous 100 hits to find the correlation  
+	
 	public ProgramPatternController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			CacheController pCache) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pCache);
+		State = null;
+		//int[] Hits = new int[100];
+		for(int i = 0; i < 100 ;i++){
+		Hits[i]  = -1;
+		}
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -20,6 +29,11 @@ public class ProgramPatternController extends CacheController {
 			Memory pMemory) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
 		// TODO Auto-generated constructor stub
+		State = null;
+		//int[] Hits = new int[100];
+		for(int i = 0; i < 100 ;i++){
+		Hits[i]  = -1;
+		}
 	}
 		
 	 // calls the object memory result
@@ -30,6 +44,19 @@ public class ProgramPatternController extends CacheController {
 		if(eAddress < 0)throw new IllegalArgumentException("Imposible address");
 		MemoryResult returnValue = new MemoryResult();
 		returnValue.addMemoryElement(cache.get(eAddress)); // goes to the cache to check if the memory accessed is on the cache,in case is not there it resolves the issue 
+		int[] address;
+		address =  Table(eAddress);
+		Integer Temp;
+		getHits();
+		if(cacheStats.ACCESS > 9){ // Correlation prefetcher starts prefetching when it has enougth data to find a pattern  
+			 for(int j = 0; (j < 10) ; j++){// max of 10 blocks being prefetch this design choice 
+				if(address[j] != -1){ //the array is inicialize to an imposible number to make sure its not put into the memory 
+					Temp = address[j];  // to use the same type of variable that the function ask for 
+					cache.put(Temp,(byte)(1)); // puts the next block with  a 1 
+					cacheStats.ACCESS++;
+				 }
+			 }
+		}
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);		
 		cacheStats.ACCESS++;
@@ -64,45 +91,8 @@ public class ProgramPatternController extends CacheController {
 	 * @throws IllegalArgumentException When address is less than zero
 	 * @throws IllegalAccessException When Child Caches Are Present
 	 */
-	/*
-	 *	public void put(Integer eAddress, Byte bite) throws NullPointerException, IndexOutOfBoundsException, IllegalAccessException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.put(" + eAddress + ", " + bite + ")");
-		// Validation
-		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
-		if(eAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Positive");
-		if(bite == null)throw new NullPointerException("bite Can Not Be NULL");
-		
-		Integer bAddress = eAddress / blockSize; // the value above just have you eddress+1 , what i think what baddress should do is divide the address 
-		Integer offset = eAddress % blockSize; // cache offset is to find the data within the block 
-		
-		// Cache Hit?
-		for(Integer mAddress : getPossibleMemoryAddressArray(eAddress)){
-			if(DEBUG_LEVEL >= 3)System.out.print("...Looking in Memory[" + mAddress + "] for bAddress " + bAddress);
-			if(memory[mAddress] != null){
-				if(memory[mAddress].getBlockAddress().equals(bAddress)){
-					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
-					cacheController.cacheStats.WRITE_HIT++;
-					// Adjust loadQueue
-					memory[mAddress].getElement(offset).setData(bite);
-					return;
-				}
-				if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
-			}
-			if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
-		}
-		
-		// If We Get Here We have a Miss
-		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
-		cacheController.cacheStats.WRITE_MISS++;
-		Integer mAddress = getNextWriteLocation(eAddress);
-		//Write Back If Necessary
-		if(memory[mAddress] != null)writeBack(mAddress);
-		//Resolve Miss
-		resolveMiss(mAddress, eAddress);
-		//Update Value
-		memory[mAddress].getElement(offset).setData(bite);
-	}
-	 * */
+	
+
 	public void put(Integer eAddress, Byte bite) throws IllegalAccessException, NullPointerException, IllegalArgumentException {
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.put(" + eAddress + ", " + bite +")");
 		//Prevent Element Access if ChildCache(s) is/are Present
@@ -111,25 +101,8 @@ public class ProgramPatternController extends CacheController {
 		if(eAddress == null)throw new NullPointerException("address Can Not Be Null");
 		if(eAddress < 0)throw new IllegalArgumentException("address Must Be Zero or Greater");		
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
-		//cache.put(eAddress,((byte)0)); // puts the next block
-		//cache.put(eAddress,bite); // puts the next block
-
-		int[] address;
-		address =  Table(eAddress);
-
-		Integer Temp;
-		
-		//cache.put(eAddress,bite); // puts the next block
-		 for(int j = 0; (j < 10) ; j++){
-			 //cache.put(eAddress,bite); // puts the next block
-			if(address[j] != -1){
-				Temp = address[j];  // to use the same type of variable that the function ask for 
-				cache.put(Temp,bite); // puts the next block
-				cacheStats.ACCESS++;
-				//break;
-			 }
-		}
-		
+		cache.put(eAddress,bite); // puts the next block
+		cacheStats.ACCESS++;
 	}
 	
 	/**
@@ -156,38 +129,29 @@ public class ProgramPatternController extends CacheController {
 		for(int i=0;i < 10 ;i++){
 			address[i] = -1;
 		}
-		
+		if(cacheStats.ACCESS-cacheStats.READ_HIT  > 100 ){
+			address =  Random(address);
+		}
+		else{
 		address =  Sequential(eAddress,address);
-		// address = Random(10000); // random access pattern 
-		/*
-		 *table to check what kind of access pattern 
-		 * 
-		 * 
-		 * */
-		
-		
-         // then call one of the fuctions below 		
+		}			
 		return address;
 	}
 	
 	public int[] Sequential(int eAddress,int address[]) throws IllegalAccessException{
      	int  j=0;
      	Integer line = cache.getBlockSize();
-     	Integer size = cache.getAssoc()*cache.getBlockSize();
      	Integer bAddress = eAddress / line;
 		Integer offset	 = eAddress % line; 
      	if(offset == (line-2)){
-	    	for (int i = (bAddress+1)*line ; (i < (8*line+((bAddress+1)*line)))&&(i < 16*size); i=i+line){
+     		Integer size = cache.getCacheController().getParentMem().getMemorySize();
+	    	for (int i = (bAddress+1)*line ; (i < (8*line+((bAddress+1)*line)))&&(i < size); i=i+line){
 	    		if(j < 10){
-			//	address[j] = i/line;  
 				address[j] = i;  
-
 	    		j++;
 	    		}
 			}
      	}
- 
- //    	address[0] = eAddress;
 		return address;		
 	}
 	// row is a how many values a row is 
@@ -233,14 +197,37 @@ public class ProgramPatternController extends CacheController {
 		return address;
 	}
 
-	public int[] Random(int size,int address[])throws IllegalAccessException{
+	public int[] Random(int address[])throws IllegalAccessException{
 		int  i = 0 ;
 		Random rand = new Random();
-		for(int j = 0; j < 5; j++){
+		Integer size = cache.getCacheController().getParentMem().getMemorySize();
+		for(int j = 0; j < 6; j++){
 			i =  rand.nextInt(size);// from zero to size as random value 
 			address[j] = i ; 				
 		}
 		return address;	
+	}
+	
+	public void getHits(){
+		int j= 0;
+	/*	//int hits[100];
+		for(int i=0;i < 100; i++){
+			if(Hits[i] == -1){ // we just started and we need to start keeping track of hits
+				Hits[i] = cacheStats.READ_HIT;
+				break;
+			}
+			else if(i == 99){// we filled the Hits tracker
+				while(j != 97){
+				Hits[j] = Hits[j+1];
+				j++;
+				}
+				Hits[99] = -1;
+				break;
+			}
+		}
+		//Hits = hits;
+		return ;
+		*/
 	}
 	
 }

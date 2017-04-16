@@ -51,6 +51,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	protected ArrayList<CacheController> childCaches;
 	
 	protected CacheStatistics cacheStats;
+	
+	public Integer TotalSize;
 
 	/**
 	 * Creates a Memory Representation
@@ -71,6 +73,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		
 		blockSize = bSize;
 		accessTime = aTime;
+		TotalSize = tSize;
 		// Check blockSize vs. totalSize
 		if(tSize % blockSize != 0)throw new ArrayIndexOutOfBoundsException("Block Size Not Aligned with Total Size");	
 		Integer numBlocks = tSize / bSize;
@@ -216,5 +219,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	
 	public CacheStatistics getMemoryStats(){
 		return cacheStats;
+	}
+	public Integer getMemorySize(){
+		return TotalSize;
 	}
 }
