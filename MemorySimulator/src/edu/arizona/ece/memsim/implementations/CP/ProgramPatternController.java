@@ -13,20 +13,24 @@ public class ProgramPatternController extends CacheController {
 	private String State; // this keeps track of the pattern state whatever pattern is following 
 	
 	public Double HitsRatio ; //Keeps track of the  previous 100 hits to find the correlation  
+
+	public Integer TotalMemSize;
 	
-	public ProgramPatternController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
+	public ProgramPatternController(Integer level,Integer MemSize ,Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			CacheController pCache) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pCache);
 		State = null;
+		TotalMemSize = MemSize;
 		//HitsRatio = 0;
 		// TODO Auto-generated constructor stub
 	}
 	
-	public ProgramPatternController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
+	public ProgramPatternController(Integer level,Integer MemSize, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			Memory pMemory) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
 		// TODO Auto-generated constructor stub
 		State = null;
+		TotalMemSize = MemSize;
 		//HitsRatio = 0;
 	}
 		
@@ -116,7 +120,10 @@ public class ProgramPatternController extends CacheController {
 		//cacheStats.BLOCKWRITE++;	
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
-	
+	public void SetMemSize(Integer Size){ // setter for the total Memsize
+		TotalMemSize = Size;
+		return;
+	}
 	public int[] Table(int eAddress) throws IllegalAccessException{
 		int address[] = new int[10];
 		for(int i=0;i < 10 ;i++){
@@ -125,7 +132,7 @@ public class ProgramPatternController extends CacheController {
 		double temp = (cacheStats.READ_HIT-cacheStats.READ_MISS);
 		temp = ((temp/cacheStats.ACCESS)*100); // the ratio is total hits minus the misses divided by total access in percent
 		// 1% sample for access pattern determination 
-		if(cacheStats.ACCESS < cache.getCacheController().getParentMem().getMemorySize()*(0.01) ){ // Cooling state for the algorithm first checks the outcome of the prefetcher 
+		if(cacheStats.ACCESS < TotalMemSize*(0.01) ){ // Cooling state for the algorithm first checks the outcome of the prefetcher 
 			 address = Strided(eAddress,address); // strided is always the first option thinking that the compiler optimizations sets memory for prefetching 
 			 String Stemp = "Initial";
 			 State = Stemp;

@@ -12,39 +12,28 @@ public class CP  {
 	protected static CacheController L1, L2;
 	protected static Memory mem;
 	private static Integer BlockSize ;
-	/*public CP(CacheController L1,CacheController L2,Memory mem){//constructor
-		L1 = L1; 
-	}
-	*/
+	private static Integer TotalMemSize;
+
 	public static void main(String[] args) throws InterruptedException{
 		Run();
 		System.exit(0);
 	}
-	public Memory getmem(){
-		return mem;
-	}
-	public CacheController getCache1(){
-		return L1;
-	}
-	public CacheController getCache2(){
-		return L2;
-	}
-	
 	
 	public static void Run() throws InterruptedException{
 		try {
-			//Reset();//
-			//BasicSequentialAccess(); 
-			//Reset();
-			//StrideAccess();
-			//Reset();// 
-			//SequentialAccess(); 
-			//Reset();
-			//ScatterAccessLight();
-			//Reset();
-			//ScatterAccessMedium();
-			//Reset();
-			//ScatterAccessHard();
+			
+			Reset();//
+			BasicSequentialAccess(); 
+			Reset();
+			StrideAccess();
+			Reset();// 
+			SequentialAccess(); 
+			Reset();
+			ScatterAccessLight();
+			Reset();
+			ScatterAccessMedium();
+			Reset();
+			ScatterAccessHard();
 			Reset();
 			RandomAccess();
 		} catch (Exception e) {
@@ -54,46 +43,24 @@ public class CP  {
 	}
 	
 	public static void Reset() throws Exception{
-		BlockSize = 64; // Coherency block size must be the same 
+		BlockSize = 64; 		// Coherence block size must be the same
+		TotalMemSize = 131072;
+		//TotalMemSize = 134217728;
 		mem = null;
-		//mem = new Memory(134217728, 64, 200);// 128MB, 64B Block, 200 Cycle Access
-		mem = new Memory(131072, BlockSize, 200);// 128KB, 64B Block, 200 Cycle Access //************************** For debugging
+		mem = new Memory(TotalMemSize, BlockSize, 200);// TotalMemSize B, BlockSize B Block, 200 Cycle Access 
 		L2 = null;//Cache controller to keep it consistent for the prefetching on L1 cache 
 		L2 = new CacheController(2, 131072, BlockSize, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access		
 		L1 = null; // fully asocciative is 1
-		L1 = new ProgramPatternController(1, 8192, BlockSize, 1, 1, mem);// 8KB, 64B Block, Fully associative, 1 Cycle Access
-
+		L1 = new ProgramPatternController(1,TotalMemSize ,8192, BlockSize, 1, 1, L2);// 8KB, 64B Block, Fully associative, 1 Cycle Access
 	}	
 
-
-
+  // Memory Access Pattern Organized by Difficulty, The Easiest one is the first one 
 	//Verifying Hits for perfect memory pattern
 	public static void BasicSequentialAccess() throws Exception{
 		System.out.println("Running Perfect Sequential Memory Access");
 		//For debugging perfect if you prefetech the next block always
 		for(int i = 0; i < mem.getMemorySize(); i++){
 			L1.get(i);
-		}
-		printStats("L1", L1.getCacheStats());
-		printStats("L2", L2.getCacheStats());
-		printStats("M1", mem.getMemoryStats());
-	}
-		
-	public static void SequentialAccess() throws NullPointerException, IllegalArgumentException, IllegalAccessException{
-		System.out.println("Running Sequential Memory Access Pattern");
-		Random rand = new Random();
-		Integer Sequence = 0;
-		for(int i = 0; i < mem.getMemorySize() ; i++){
-			Integer pos = rand.nextInt(i+1)+i; // get the first index from the 0 to the reference index plus de base index to make it sequential 
-			Sequence = rand.nextInt((mem.getMemorySize()/BlockSize)) + pos; // how many iterations of the sequencial access pattern 
-			if(Sequence > mem.getMemorySize()){ // got out of bounds, therefore we need to reach the top
-				Sequence =  mem.getMemorySize()-1;
-			}
-			while (pos < Sequence){
-				L1.get(pos);
-				pos = pos+1;
-			}
-			i = i+pos-1; // make the new reference index a bigger index 
 		}
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
@@ -117,6 +84,27 @@ public class CP  {
 		printStats("L2", L2.getCacheStats());
 		printStats("M1", mem.getMemoryStats());
 	}
+			
+	public static void SequentialAccess() throws NullPointerException, IllegalArgumentException, IllegalAccessException{
+		System.out.println("Running Sequential Memory Access Pattern");
+		Random rand = new Random();
+		Integer Sequence = 0;
+		for(int i = 0; i < mem.getMemorySize() ; i++){
+			Integer pos = rand.nextInt(i+1)+i; // get the first index from the 0 to the reference index plus de base index to make it sequential 
+			Sequence = rand.nextInt((mem.getMemorySize()/BlockSize)) + pos; // how many iterations of the sequencial access pattern 
+			if(Sequence > mem.getMemorySize()){ // got out of bounds, therefore we need to reach the top
+				Sequence =  mem.getMemorySize()-1;
+			}
+			while (pos < Sequence){
+				L1.get(pos);
+				pos = pos+1;
+			}
+			i = i+pos-1; // make the new reference index a bigger index 
+		}
+		printStats("L1", L1.getCacheStats());
+		printStats("L2", L2.getCacheStats());
+		printStats("M1", mem.getMemoryStats());
+	}
 	
 	public static void ScatterAccessLight() throws NullPointerException, IllegalArgumentException, IllegalAccessException {
 		System.out.println("Easy Scatter Memory Access Pattern");
@@ -135,7 +123,7 @@ public class CP  {
 		printStats("L2", L2.getCacheStats());
 		printStats("M1", mem.getMemoryStats());
 	}
-	//Light
+	
 	
 	public static void ScatterAccessMedium() throws NullPointerException, IllegalArgumentException, IllegalAccessException {
 		System.out.println("Medium Scatter Memory Access Pattern");

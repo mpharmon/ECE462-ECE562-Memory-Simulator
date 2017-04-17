@@ -155,14 +155,16 @@ public class Cache {
 			if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
 		}
 		
-		// If We Get Here We have a Miss
+		// If We Get Here We have a Read Miss
 		cacheController.cacheStats.READ_MISS++;
 		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
 		Integer mAddress = getNextWriteLocation(bAddress);
 		//Write Back If Necessary
 		if(memory[mAddress] != null)writeBack(mAddress);
 		//Resolve Miss
-		resolveMiss(mAddress, bAddress*blockSize);// mad=0,bad=1024
+		resolveMiss(mAddress, bAddress*blockSize);// This works when you only have main memory i dont know why
+		//resolveMiss(mAddress, bAddress);// With L1 and L2 cache
+
 		//Return Value
 		MemoryElement mElement = memory[mAddress].getElement(offset);
 		if(DEBUG_LEVEL >= 2)System.out.println("Returning MemoryElement " + mElement);
@@ -251,41 +253,7 @@ public class Cache {
 		memory[mAddress].getElement(offset).setData(bite);
 	}
 	
-	
-	/*
-	 * Sets aprefetch block without affecting the stats
-	 * */
-	public void putPrefetch(Integer eAddress, Byte bite) throws NullPointerException, IndexOutOfBoundsException, IllegalAccessException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.put(" + eAddress + ", " + bite + ")");
-		// Validation
-		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
-		if(eAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Positive");
-		if(bite == null)throw new NullPointerException("bite Can Not Be NULL");
-		
-		Integer bAddress = eAddress / blockSize;
-		Integer offset = eAddress % blockSize; // cache offset is to find the data within the block 
-		// to prefetch we first check if the parent has the memory
-		for(Integer mAddress : getPossibleMemoryAddressArray(eAddress)){
-			if(memory[mAddress] != null){ //we already have the memory at the cache 
-				if(memory[mAddress].getBlockAddress() == bAddress ){	
-						// Adjust loadQueue
-						memory[mAddress].getElement(offset).setData(bite); 
-						return;
-				}
-			}
-		}
-		
-		// prefetch if is not there 
 
-		Integer mAddress = getNextWriteLocation(eAddress);
-		//Write Back If Necessary
-		if(memory[mAddress] != null)writeBack(mAddress);
-		//Resolve Miss
-		resolveMiss(mAddress, eAddress);
-		//Update Value
-		memory[mAddress].getElement(offset).setData(bite);
-	}
-	
 	
 	public void putBlock(MemoryBlock block) throws IllegalAccessException, NullPointerException{
 		if(DEBUG_LEVEL >= 1)System.out.println("Cache.putBlock(" + block.getBlockAddress() + ")");
@@ -377,14 +345,14 @@ public class Cache {
 		
 		MemoryBlock block;
 		
-		if(cacheController.parentMemory != null){ //if the parent memory is not null
+		if(cacheController.parentMemory != null){ //if the parent memory is not null this is for L2 cache or the cache next to the memory 
 			if(DEBUG_LEVEL >= 3)System.out.println("...Getting From Parent Memory");
-			block = cacheController.parentMemory.getBlock(address); //the address of the block was 1024 but when the block was gotten it has addres 16 
+			block = cacheController.parentMemory.getBlock(address); //  asking for the memory block at main memory using the full address because the main memory sees the whole array as one
 			if(DEBUG_LEVEL >= 4)System.out.println("Cache.resolveMiss(" + address + ")\n...Got " + block + ")");
 		}else if(cacheController.parentCache != null){
 			if(DEBUG_LEVEL >= 3)System.out.println("...Getting From Parent Cache");
-			block = cacheController.parentCache.getBlock(address);
-			if(DEBUG_LEVEL >= 4)System.out.println("Cache.resolveMiss(" + address + ")\n...Got " + block + ")");
+			block = cacheController.parentCache.getBlock(address/blockSize); // for the cache if you want that block from main memory even if your L2 cache does not have it this will ensure that the L2 cachecontroller 
+			if(DEBUG_LEVEL >= 4)System.out.println("Cache.resolveMiss(" + address + ")\n...Got " + block + ")"); //knows which main memory block but then it multiplies by blocksize
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
