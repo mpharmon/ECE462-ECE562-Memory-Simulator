@@ -108,8 +108,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		if(address < 0)throw new ArrayIndexOutOfBoundsException("bAddress Must Be Positive");
 		Integer mAddress = address / blockSize;
 		//Integer mAddress = address ;
-		//Integer size = memory.length ;
-		//if(mAddress < size){
+		Integer size = memory.length ;
+		if(mAddress < size){
 			if(memory[mAddress] == null){ // this populates the whole block if the parent block is null,that could imply two things one L1 parent L2 cache is NUll or L2 parent Main mem is NULL
 				if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + mAddress + "] MISS, Creating MemoryBlock");	
 				cacheStats.BLOCKREAD_MISS++;		
@@ -127,9 +127,9 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 				MemoryBlock newMB = memory[mAddress].clone();
 				if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + newMB + ")");
 				return newMB;
-	//	}
-	//	MemoryBlock newMB = memory[0].clone();
-	//	return newMB;
+		}
+		MemoryBlock newMB = memory[0].clone();
+		return newMB;
 	}
 	
 	
