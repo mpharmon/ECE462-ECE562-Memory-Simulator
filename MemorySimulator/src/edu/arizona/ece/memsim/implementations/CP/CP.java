@@ -21,9 +21,9 @@ public class CP  {
 	
 	public static void Run() throws InterruptedException{
 		try {
-			
 			Reset();//
 			BasicSequentialAccess(); 
+			
 			Reset();
 			StrideAccess();
 			Reset();// 
@@ -59,7 +59,7 @@ public class CP  {
 	public static void BasicSequentialAccess() throws Exception{
 		System.out.println("Running Perfect Sequential Memory Access");
 		//For debugging perfect if you prefetech the next block always
-		for(int i = 0; i < mem.getMemorySize(); i++){
+		for(int i = 0; i < TotalMemSize; i++){
 			L1.get(i);
 		}
 		printStats("L1", L1.getCacheStats());
@@ -70,7 +70,7 @@ public class CP  {
 	public static void StrideAccess() throws Exception{
 		System.out.println("Running Stride Memory Access Pattern");
 		Random rand = new Random();
-		for(int i = 0; i < mem.getMemorySize() ; i++){
+		for(int i = 0; i < TotalMemSize ; i++){
 			Integer rw = rand.nextInt(2);
 			if(rw == 0){// Read
 				L1.get(i);
@@ -89,11 +89,11 @@ public class CP  {
 		System.out.println("Running Sequential Memory Access Pattern");
 		Random rand = new Random();
 		Integer Sequence = 0;
-		for(int i = 0; i < mem.getMemorySize() ; i++){
+		for(int i = 0; i < TotalMemSize ; i++){
 			Integer pos = rand.nextInt(i+1)+i; // get the first index from the 0 to the reference index plus de base index to make it sequential 
-			Sequence = rand.nextInt((mem.getMemorySize()/BlockSize)) + pos; // how many iterations of the sequencial access pattern 
-			if(Sequence > mem.getMemorySize()){ // got out of bounds, therefore we need to reach the top
-				Sequence =  mem.getMemorySize()-1;
+			Sequence = rand.nextInt((TotalMemSize/BlockSize)) + pos; // how many iterations of the sequencial access pattern 
+			if(Sequence > TotalMemSize){ // got out of bounds, therefore we need to reach the top
+				Sequence =  TotalMemSize - 1;
 			}
 			while (pos < Sequence){
 				L1.get(pos);
@@ -109,9 +109,9 @@ public class CP  {
 	public static void ScatterAccessLight() throws NullPointerException, IllegalArgumentException, IllegalAccessException {
 		System.out.println("Easy Scatter Memory Access Pattern");
 		Random rand = new Random();
-		for(int i = 0; i < mem.getMemorySize() ; i++){
-			Integer pos = rand.nextInt(mem.getMemorySize()); // any random value within the whole memory 
-			Integer length = rand.nextInt((mem.getMemorySize()/BlockSize));
+		for(int i = 0; i < TotalMemSize ; i++){
+			Integer pos = rand.nextInt(TotalMemSize); // any random value within the whole memory 
+			Integer length = rand.nextInt((TotalMemSize/BlockSize));
 			i = i+length; // add the number of acces to  the total 
 			length = length + pos;
 			while (pos < length){
@@ -128,8 +128,8 @@ public class CP  {
 	public static void ScatterAccessMedium() throws NullPointerException, IllegalArgumentException, IllegalAccessException {
 		System.out.println("Medium Scatter Memory Access Pattern");
 		Random rand = new Random();
-		for(int i = 0; i < mem.getMemorySize() ; i++){
-			Integer pos = rand.nextInt(mem.getMemorySize()); // any random value within the whole memory 
+		for(int i = 0; i < TotalMemSize ; i++){
+			Integer pos = rand.nextInt(TotalMemSize); // any random value within the whole memory 
 			Integer length = rand.nextInt(15); // just 10 to make it hard because either you have one block or two in the 
 			i = i+length; // add the number of acces to  the total 
 			length = length + pos;
@@ -146,8 +146,8 @@ public class CP  {
 	public static void ScatterAccessHard() throws NullPointerException, IllegalArgumentException, IllegalAccessException {
 		System.out.println("HardCore Scatter Memory Access Pattern");
 		Random rand = new Random();
-		for(int i = 0; i < mem.getMemorySize() ; i++){
-			Integer pos = rand.nextInt(mem.getMemorySize()); // any random value within the whole memory 
+		for(int i = 0; i < TotalMemSize ; i++){
+			Integer pos = rand.nextInt(TotalMemSize); // any random value within the whole memory 
 			Integer length = rand.nextInt(10); // just 10 to make it hard because either you have one block or two in the 
 			i = i+length; // add the number of acces to  the total 
 			length = length + pos;
@@ -164,8 +164,8 @@ public class CP  {
 	public static void RandomAccess() throws Exception{
 		System.out.println("Running Random Memory Access");
 		Random rand = new Random();
-		for(int i = 0; i < mem.getMemorySize() ; i++){
-				Integer pos = rand.nextInt(mem.getMemorySize());
+		for(int i = 0; i < TotalMemSize ; i++){
+				Integer pos = rand.nextInt(TotalMemSize);
 				L1.get(pos);
 			}
 		printStats("L1", L1.getCacheStats());
@@ -175,6 +175,7 @@ public class CP  {
 	
 	
 	protected static void printStats(String prefix, CacheStatistics stats){
+		System.out.println(prefix + ".HitRatio\t\t" + stats.HitRatio);
 		System.out.println(prefix + ".ACCESSES\t\t" + stats.ACCESS);
 		System.out.println(prefix + ".READ_TOTAL\t\t" + (stats.READ_HIT + stats.READ_MISS));
 		System.out.println(prefix + ".READ_HITS\t\t" + stats.READ_HIT);

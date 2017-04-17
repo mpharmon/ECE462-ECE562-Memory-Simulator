@@ -44,7 +44,7 @@ public class ProgramPatternController extends CacheController {
 		returnValue.addMemoryElement(cache.get(eAddress)); // goes to the cache to check if the memory accessed is on the cache,in case is not there it resolves the issue 
 		int[] address;
 		Integer Temp;
-		//State = "off";// uncomment this to check values without prefetching 
+		State = "off";// uncomment this to check values without prefetching 
 		if((cacheStats.ACCESS > 1) && (State != "off")){ // Correlation prefetcher starts prefetching when it has enougth data to find a pattern  
 			address =  Table(eAddress);
 			 for(int j = 0; (j < 10) ; j++){// max of 10 blocks being prefetch this design choice 
@@ -54,6 +54,11 @@ public class ProgramPatternController extends CacheController {
 					cacheStats.ACCESS++;
 				 }
 			 }
+		}else
+		{
+			double temp = (cacheStats.READ_HIT-cacheStats.READ_MISS);
+			temp = ((temp/cacheStats.ACCESS)*100); // the ratio is total hits minus the misses divided by total access in percent
+			cacheStats.HitRatio = temp;
 		}
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);		
 		cacheStats.ACCESS++;
@@ -131,6 +136,7 @@ public class ProgramPatternController extends CacheController {
 		}
 		double temp = (cacheStats.READ_HIT-cacheStats.READ_MISS);
 		temp = ((temp/cacheStats.ACCESS)*100); // the ratio is total hits minus the misses divided by total access in percent
+		cacheStats.HitRatio = temp;
 		// 1% sample for access pattern determination 
 		if(cacheStats.ACCESS < TotalMemSize*(0.01) ){ // Cooling state for the algorithm first checks the outcome of the prefetcher 
 			 address = Strided(eAddress,address); // strided is always the first option thinking that the compiler optimizations sets memory for prefetching 
