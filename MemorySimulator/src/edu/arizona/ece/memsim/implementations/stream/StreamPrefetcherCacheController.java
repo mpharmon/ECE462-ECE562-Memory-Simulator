@@ -10,13 +10,11 @@ public class StreamPrefetcherCacheController extends CacheController {
 	public StreamPrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			CacheController pCache) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pCache);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public StreamPrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			Memory pMemory) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public MemoryResult get(Integer eAddress) throws Exception{
