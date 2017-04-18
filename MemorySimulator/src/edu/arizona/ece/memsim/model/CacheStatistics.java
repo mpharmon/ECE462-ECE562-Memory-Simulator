@@ -54,26 +54,6 @@ public class CacheStatistics {
 	public Integer WRITE_HIT;
 	
 	/**
-	 * Counts Cache Element Reads
-	 */
-	//public Integer READ;
-	
-	/**
-	 * Counts Cache Block Reads
-	 */
-	//public Integer BLOCKREAD;
-	
-	/**
-	 * Counts Cache Element Writes
-	 */
-	//public Integer WRITE;
-	
-	/**
-	 * Counts Cache Block Writes
-	 */
-	//public Integer BLOCKWRITE;
-	
-	/**
 	 * Counts Cache Replacements
 	 */
 	public Integer REPLACEMENT;

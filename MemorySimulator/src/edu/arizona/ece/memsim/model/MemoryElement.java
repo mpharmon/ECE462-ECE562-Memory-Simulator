@@ -11,7 +11,14 @@ package edu.arizona.ece.memsim.model;
  */
 public class MemoryElement {
 	
+	/**
+	 * Element Data
+	 */
 	protected Byte data;
+	
+	/**
+	 * Element Address
+	 */
 	protected Integer eAddress;
 	
 	/**
@@ -52,6 +59,11 @@ public class MemoryElement {
 		data = bite;
 	}
 	
+	/**
+	 * Get'er for the Element Address
+	 * 
+	 * @return
+	 */
 	public Integer getElementAddress(){
 		return eAddress;
 	}

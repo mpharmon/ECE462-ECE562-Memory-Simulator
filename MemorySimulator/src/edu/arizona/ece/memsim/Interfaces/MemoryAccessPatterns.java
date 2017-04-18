@@ -7,12 +7,16 @@ public interface MemoryAccessPatterns {
 	 * @throws Exception When Something Screws Up
 	 */
 	public void SequentialAccess() throws Exception;
+	
 	/**
 	 * Access Memory Randomly
+	 * @throws Exception When Something Screws Up
 	 */
-	public void RandomAccess();
+	public void RandomAccess() throws Exception;
+	
 	/**
 	 * Access Sequential Memory Elements in Random Memory Blocks
+	 * @throws Exception When Something Screws Up
 	 */
-	public void StrideAccess();
+	public void StrideAccess() throws Exception;
 }

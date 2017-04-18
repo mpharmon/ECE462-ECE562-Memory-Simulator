@@ -191,7 +191,6 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	/**
 	 * Gets a MemoryBlock from Cache, and loads it from a Parent Cache or Parent Memory If Necessary
 	 * 
-	 * 
 	 * @param bAddress Address of the MemoryBlock desired
 	 * @return MemoryBlock
 	 * @throws Exception 
@@ -339,10 +338,12 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.onWriteUpdate()...Finished");
 	}
 	
+	/**
+	 * Gets the CacheStatistics for this Level of Cache
+	 * 
+	 * @return {@link CacheStatistics} for this Cache
+	 */
 	public CacheStatistics getCacheStats(){
 		return cacheStats;
-	}
-	public Memory getParentMem(){
-		return parentMemory;
 	}
 }

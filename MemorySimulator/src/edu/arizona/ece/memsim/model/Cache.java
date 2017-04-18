@@ -142,7 +142,6 @@ public class Cache {
 	 * @throws Exception 
 	 * @throws IndexOutOfBoundsException When eAddress is Less Than Zero
 	 */
-
 	public MemoryElement get(Integer eAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.get(" + eAddress + ")");
 		
@@ -281,7 +280,6 @@ public class Cache {
 	 * @param bite Byte to be Written
 	 * @throws Exception 
 	 */
-
 	public void put(Integer eAddress, Byte bite) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.put(" + eAddress + ", " + bite + ")");
 	
@@ -326,6 +324,12 @@ public class Cache {
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.put()...Finished");
 	}
 	
+	/**
+	 * Places a Block of Memory into this level of Cache from a Lower Level of Cache
+	 * 
+	 * @param block {@link MemoryBlock} to be Written to this Level of Cache
+	 * @throws Exception
+	 */
 	public void putBlock(MemoryBlock block) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.putBlock([blockAddress]" + block.getBlockAddress() + ")");
 		
@@ -403,7 +407,12 @@ public class Cache {
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.putBlock() Finished");
 	}
 	
-
+	/**
+	 * Gets an Array of the Possible Cache Location (Slots) for the Given Address (Used for n-Way Associative Caches, Responds for all Cache Types)
+	 * 
+	 * @param address Address in Memory
+	 * @return Array of mAddress'es
+	 */
 	protected final Integer[] getPossibleMemoryAddressArray(Integer address){
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray(" + address + ")");
 		
@@ -492,6 +501,12 @@ public class Cache {
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss()...Finished");
 	}
 	
+	/**
+	 * Writes back the {@link MemoryBlock} at mAddress to the Next Higher Level of Cache/Memory
+	 * 
+	 * @param mAddress Cache Location (Slot) to be Written Back
+	 * @throws Exception
+	 */
 	protected final void writeBack(Integer mAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.writeBack(" + mAddress + ")");
 		
@@ -508,6 +523,12 @@ public class Cache {
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.writeBack()...Finished");
 	}
 	
+	/**
+	 * Finds the location (slot) in Cache given by bAddress
+	 * 
+	 * @param bAddress Block Address for the 
+	 * @return Location/Slot in Cache if found, NULL otherwise
+	 */
 	protected final Integer findBlockInMemory(Integer bAddress){
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.findBlockInMemory(" + bAddress + ")");
 		

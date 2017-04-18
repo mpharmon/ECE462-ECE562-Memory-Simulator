@@ -5,11 +5,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class LoadQueue extends ArrayBlockingQueue<Integer> {
 
 	/**
-	 * 
+	 * Required by Serializable Interface, Not Used
 	 */
 	private static final long serialVersionUID = 1L;
 	
 	/**
+	 * Constructor
+	 * 
 	 * @param capacity Fixed Size of The Queue
 	 */
 	public LoadQueue(int capacity) {

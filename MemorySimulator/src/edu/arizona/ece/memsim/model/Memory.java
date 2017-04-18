@@ -52,9 +52,10 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 */
 	protected ArrayList<CacheController> childCaches;
 	
+	/**
+	 * Memory (Cache) Statistics for this Memory
+	 */
 	protected CacheStatistics cacheStats;
-	
-	public Integer TotalSize;
 
 	/**
 	 * Creates a Memory Representation
@@ -63,7 +64,6 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param bSize Block Size (in Bytes)
 	 * @param aTime Access Time (in clock cycle)
 	 */
-
 	public Memory(Integer tSize, Integer aTime){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory(" + tSize +", " + aTime + ")");
 		
@@ -134,7 +134,6 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param block The MemoryBlock being written
 	 * @return boolean If the memory block was written true, otherwise false
 	 */
-
 	public void putBlock(MemoryBlock block){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.putBlock(" + block.getBlockAddress() + ")");
 		
@@ -213,10 +212,10 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		if(DEBUG_LEVEL >= 2)System.out.println("Memory.onReadMiss()...Finished");
 	}
 	
+	/**
+	 * @return {@link CacheStatistics} of this Memory
+	 */
 	public CacheStatistics getMemoryStats(){
 		return cacheStats;
-	}
-	public Integer getMemorySize(){
-		return TotalSize;
 	}
 }

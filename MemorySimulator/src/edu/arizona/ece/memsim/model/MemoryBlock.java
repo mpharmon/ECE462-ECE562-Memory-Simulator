@@ -169,10 +169,18 @@ public class MemoryBlock implements Cloneable {
 		return newBlock;
 	}
 
+	/**
+	 * @return {@link MemoryElementIterator} That Will Iterate Over All {@link MemoryElement}'s in this MemoryBlock
+	 */
 	public MemoryElementIterator getIterator(){
 		return new MemoryElementIterator(this);
 	}
 	
+	/**
+	 * Get'er For the Block Size of this Memory Block
+	 * 
+	 * @return Block Size of this MemoryBlock
+	 */
 	public Integer getSize(){
 		return blockSize;
 	}
