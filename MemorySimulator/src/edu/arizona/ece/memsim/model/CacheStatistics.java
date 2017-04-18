@@ -87,6 +87,12 @@ public class CacheStatistics {
 	 * Counts Cache Invalidates
 	 */
 	public Integer INVALIDATE;
+	/*
+	 * Keeps Track of The Hit-Miss Ratio for number of cache Acceses 
+	 * 
+	 * */
+	
+	public Double HitRatio;
 	
 	public CacheStatistics(){
 		ACCESS = new Integer(0);
@@ -101,6 +107,7 @@ public class CacheStatistics {
 		REPLACEMENT = new Integer(0);
 		WRITEBACK = new Integer(0);
 		INVALIDATE = new Integer(0);
+		HitRatio = new Double(0);
 	}
 	
 }

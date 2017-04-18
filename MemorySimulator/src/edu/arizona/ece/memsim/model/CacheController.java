@@ -225,22 +225,20 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * @param bite Byte of the data being written
 	 * @throws Exception 
 	 */
+
 	public void put(Integer eAddress, Byte bite) throws Exception {
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.put(" + eAddress + ", " + bite +")");
 		
 		//Prevent Element Access if ChildCache(s) is/are Present
-		if(childCaches.size() > 0)throw new IllegalAccessException("Can Not Call put if Child Caches Are Present");
+		if(childCaches.size() > 0)throw new IllegalAccessException("Can Not Call put if Child Caches Are Present");	
 		
 		// Validity Checks
 		if(eAddress == null)throw new NullPointerException("address Can Not Be Null");
 		if(eAddress < 0)throw new IllegalArgumentException("address Must Be Zero or Greater");
-		
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
 		
 		cache.put(eAddress, bite);
-		
 		cacheStats.ACCESS++;
-		//cacheStats.WRITE++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
@@ -343,5 +341,8 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	
 	public CacheStatistics getCacheStats(){
 		return cacheStats;
+	}
+	public Memory getParentMem(){
+		return parentMemory;
 	}
 }

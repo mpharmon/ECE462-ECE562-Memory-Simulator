@@ -142,6 +142,7 @@ public class Cache {
 	 * @throws Exception 
 	 * @throws IndexOutOfBoundsException When eAddress is Less Than Zero
 	 */
+
 	public MemoryElement get(Integer eAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.get(" + eAddress + ")");
 		
@@ -171,7 +172,7 @@ public class Cache {
 			}
 		}
 		
-		// If We Get Here We have a Miss
+		// If We Get Here We have a Read Miss
 		cacheController.cacheStats.READ_MISS++;
 		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.get()...Cache Miss");
 		Integer wAddress = getNextWriteLocationLRU(bAddress);
@@ -280,13 +281,13 @@ public class Cache {
 	 * @param bite Byte to be Written
 	 * @throws Exception 
 	 */
+
 	public void put(Integer eAddress, Byte bite) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.put(" + eAddress + ", " + bite + ")");
 	
 		// Validation
 		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
 		if(eAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Positive");
-		
 		if(bite == null)throw new NullPointerException("bite Can Not Be NULL");
 		
 		// Reminder: Integer Division
@@ -402,6 +403,7 @@ public class Cache {
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.putBlock() Finished");
 	}
 	
+
 	protected final Integer[] getPossibleMemoryAddressArray(Integer address){
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray(" + address + ")");
 		
@@ -409,20 +411,26 @@ public class Cache {
 		
 		if(associativity == 0){// Direct Mapped Cache
 			if(DEBUG_LEVEL >= 3)System.out.print("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray()...Direct Mapped Cache, Only 1 Possible Location: ");
+			
 			returnArray[0] = (address & ((totalSize / blockSize - 1) << offsetShift)) >> offsetShift;
+			
 			if(DEBUG_LEVEL >= 4)System.out.println(returnArray[0]);
 		}else if(associativity == 1){// Fully Associative Cache
 			if(DEBUG_LEVEL >= 3)System.out.print("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray()...Fully Associatve Cache, " + wayRows + " Possible Locations");
+			
 			for(int i = 0; i < wayRows; i++)returnArray[i] = i;
 		}else{// Set Associative Cache
 			Integer set = (address & ((associativity - 1) << offsetShift)) >> offsetShift;
 			Integer setSize = totalSize / blockSize / associativity;
 			Integer setStart = set * setSize;
+			
 			if(DEBUG_LEVEL >= 3)System.out.print("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray()...Set Associatve Cache, " + setSize + " Possible Locations: ");
+			
 			for(int i = 0; i < setSize; i++){
 				if(DEBUG_LEVEL >= 3)System.out.print(" " + (setStart + i));
 				returnArray[i] = setStart + i;
 			}
+			
 			if(DEBUG_LEVEL >= 3)System.out.println("");
 		}
 		
@@ -494,9 +502,7 @@ public class Cache {
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
-		
-		cacheController.cacheStats.REPLACEMENT++;
-		
+		cacheController.cacheStats.REPLACEMENT++;	
 		memory[mAddress] = null;
 		
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.writeBack()...Finished");
@@ -549,4 +555,5 @@ public class Cache {
 			return (address & ((associativity - 1) << offsetShift)) >> offsetShift;
 		}
 	}
+	
 }

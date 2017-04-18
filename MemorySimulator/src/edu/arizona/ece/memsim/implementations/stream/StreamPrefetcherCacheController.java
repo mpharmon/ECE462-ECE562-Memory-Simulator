@@ -1,24 +1,25 @@
-package edu.arizona.ece.memsim.implementations.nextline;
+package edu.arizona.ece.memsim.implementations.stream;
 
 import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.Memory;
 import edu.arizona.ece.memsim.model.MemoryBlock;
 import edu.arizona.ece.memsim.model.MemoryResult;
 
-public class NextlinePrefetcherCacheController extends CacheController {
+public class StreamPrefetcherCacheController extends CacheController {
 	
-	public NextlinePrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
+	public StreamPrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			CacheController pCache) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pCache);
+		// TODO Auto-generated constructor stub
 	}
 	
-	public NextlinePrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
+	public StreamPrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			Memory pMemory) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
+		// TODO Auto-generated constructor stub
 	}
 	
-	@Override
-	public MemoryResult get(Integer eAddress) throws Exception{
+	public MemoryResult get(Integer eAddress) throws NullPointerException, IllegalArgumentException, IllegalAccessException{
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.get(" + eAddress + ")");
 		
 		// Prevent Element Access if ChildCache(s) is/are Present
@@ -32,10 +33,11 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		MemoryResult returnValue = new MemoryResult();
 		
 		returnValue.addMemoryElement(cache.get(eAddress));
-		
-		// Next Line Pre-Fetch
 		cache.get(eAddress + 1);
-
+		cache.get(eAddress + 2);
+		cache.get(eAddress + 3);
+		cache.get(eAddress + 64);
+		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
 		cacheStats.ACCESS++;
@@ -48,9 +50,11 @@ public class NextlinePrefetcherCacheController extends CacheController {
 	 * 
 	 * @param bAddress Address of the MemoryBlock desired
 	 * @return MemoryBlock
-	 * @throws Exception 
+	 * @throws NullPointerException When address is NULL
+	 * @throws IllegalArgumentException When address is less than zero
+	 * @throws IllegalAccessException
 	 */
-	public MemoryBlock getBlock(Integer bAddress) throws Exception {
+	public MemoryBlock getBlock(Integer bAddress) throws IllegalAccessException, NullPointerException, IllegalArgumentException {
 		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.getBlock(" + bAddress + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
@@ -60,11 +64,13 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		if(bAddress == null)throw new NullPointerException("address Can Not Be Null");
 		if(bAddress < 0)throw new IllegalArgumentException("address Must Be Greater Than Zero");
 		
-		MemoryBlock returnValue = cache.getBlock(bAddress, blockSize);
+		MemoryBlock returnValue = cache.getBlock(bAddress);
+		
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
 		cacheStats.ACCESS++;
+		//cacheStats.BLOCKREAD++;
 		
 		return returnValue;
 	}
@@ -74,9 +80,11 @@ public class NextlinePrefetcherCacheController extends CacheController {
 	 * 
 	 * @param eAddress Address of the data being written
 	 * @param bite Byte of the data being written
-	 * @throws Exception 
+	 * @throws NullPointerException When address or byte is null
+	 * @throws IllegalArgumentException When address is less than zero
+	 * @throws IllegalAccessException When Child Caches Are Present
 	 */
-	public void put(Integer eAddress, Byte bite) throws Exception {
+	public void put(Integer eAddress, Byte bite) throws IllegalAccessException, NullPointerException, IllegalArgumentException {
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.put(" + eAddress + ", " + bite +")");
 		
 		//Prevent Element Access if ChildCache(s) is/are Present
@@ -100,9 +108,10 @@ public class NextlinePrefetcherCacheController extends CacheController {
 	 * Puts a MemoryBlock Into This Level of Cache
 	 * 
 	 * @param block MemoryBlock to be written
-	 * @throws Exception 
+	 * @throws NullPointerException When block is NULL
+	 * @throws IllegalAccessException When Method is Called when childCache(s) are Present
 	 */
-	public void putBlock(MemoryBlock block) throws Exception{
+	public void putBlock(MemoryBlock block) throws IllegalAccessException, NullPointerException{
 		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.putBlock(" + block.getBlockAddress() + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
@@ -118,5 +127,5 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
-	
+
 }

@@ -53,6 +53,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	protected ArrayList<CacheController> childCaches;
 	
 	protected CacheStatistics cacheStats;
+	
+	public Integer TotalSize;
 
 	/**
 	 * Creates a Memory Representation
@@ -61,6 +63,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param bSize Block Size (in Bytes)
 	 * @param aTime Access Time (in clock cycle)
 	 */
+
 	public Memory(Integer tSize, Integer aTime){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory(" + tSize +", " + aTime + ")");
 		
@@ -79,12 +82,11 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		memory = new MemoryElement[totalSize];
 		
 		childCaches = new ArrayList<CacheController>();
-		
 		cacheStats = new CacheStatistics();
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("Memory()...Finished");
 	}
-	
+
 	/**
 	 * Gets a Block of Memory
 	 * 
@@ -125,12 +127,14 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		return newMB;
 	}
 	
+	
 	/**
 	 * Updates a MemoryBlock in Memory
 	 * 
 	 * @param block The MemoryBlock being written
 	 * @return boolean If the memory block was written true, otherwise false
 	 */
+
 	public void putBlock(MemoryBlock block){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.putBlock(" + block.getBlockAddress() + ")");
 		
@@ -169,7 +173,6 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	@Override
 	public boolean unRegisterChildCache(CacheController cacheController) {
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.unRegisterChildCache(CacheController)");
-		
 		if(cacheController == null)throw new NullPointerException("cacheController Can Not Be Null");
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("Memory.unRegisterChildCache()...Finished");
@@ -212,5 +215,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	
 	public CacheStatistics getMemoryStats(){
 		return cacheStats;
+	}
+	public Integer getMemorySize(){
+		return TotalSize;
 	}
 }
