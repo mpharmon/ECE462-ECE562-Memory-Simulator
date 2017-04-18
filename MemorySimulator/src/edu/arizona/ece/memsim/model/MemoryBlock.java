@@ -10,7 +10,7 @@ import edu.arizona.ece.memsim.enums.MemoryState;
  * @author Mike Harmon (mpharmon@email.arizona.edu)
  * 
  */
-public class MemoryBlock implements Cloneable{
+public class MemoryBlock implements Cloneable {
 	
 	/**
 	 * Level of Debug Output
@@ -114,7 +114,7 @@ public class MemoryBlock implements Cloneable{
 			if(DEBUG_LEVEL >= 5)System.out.println("...Returning True");
 			return true;
 		}else{
-			throw new IndexOutOfBoundsException("address Out of Bounds");
+			throw new IndexOutOfBoundsException("address Out of Bounds (given: " + address + ")");
 		}
 	}
 	

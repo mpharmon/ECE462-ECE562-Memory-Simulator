@@ -9,6 +9,8 @@ import edu.arizona.ece.memsim.Interfaces.WriteInvalidateListener;
 /**
  * Models the Main System Memory of a Computer
  * 
+ * Data stored in Array memory[] is byte indexed
+ * 
  * @author Mike Harmon (mpharmon@email.arizona.edu)
  *
  */
@@ -33,12 +35,12 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	/**
 	 * List Holding the MemoryBlocks Currently in this Memory
 	 */
-	protected MemoryBlock[] memory;
+	protected MemoryElement[] memory;
 	
 	/**
-	 * Block Size of this Memory
+	 * Total Size of this Memory
 	 */
-	protected Integer blockSize;
+	protected Integer totalSize;
 	
 	/**
 	 * Access Time of Memory
@@ -59,34 +61,28 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param bSize Block Size (in Bytes)
 	 * @param aTime Access Time (in clock cycle)
 	 */
-	public Memory(Integer tSize, Integer bSize, Integer aTime){
-		if(DEBUG_LEVEL >= 1)System.out.println("Memory(" + tSize + ", " + bSize +", " + aTime + ")");
+	public Memory(Integer tSize, Integer aTime){
+		if(DEBUG_LEVEL >= 1)System.out.println("Memory(" + tSize +", " + aTime + ")");
 		
 		// Validity Checking
 		if(tSize == null)throw new NullPointerException("tSize Can Not Be Null");
 		if(tSize < 0)throw new IllegalArgumentException("tSize Must Be Greater Than Zero");
 		
-		if(bSize == null)throw new NullPointerException("tSize Can Not Be Null");
-		if(bSize < 0)throw new IllegalArgumentException("bSize Must Be Greater Than Zero");
-		
 		if(aTime == null)throw new NullPointerException("aTime Can Not Be Null");
 		if(aTime < 0)throw new IllegalArgumentException("aTime Must Be Greater Than Zero");
 		
-		blockSize = bSize;
+		totalSize = tSize;
 		accessTime = aTime;
 		
-		// Check blockSize vs. totalSize
-		if(tSize % blockSize != 0)throw new ArrayIndexOutOfBoundsException("Block Size Not Aligned with Total Size");
-		
-		Integer numBlocks = tSize / bSize;
-		if(DEBUG_LEVEL >= 3)System.out.println("Creating memory[" + numBlocks + "]");
-		memory = new MemoryBlock[numBlocks];
+		//Integer numBlocks = tSize / bSize;
+		if(DEBUG_LEVEL >= 3)System.out.println("Memory()...Creating memory[" + totalSize + "]");
+		memory = new MemoryElement[totalSize];
 		
 		childCaches = new ArrayList<CacheController>();
 		
 		cacheStats = new CacheStatistics();
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("Memory() Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory()...Finished");
 	}
 	
 	/**
@@ -95,36 +91,36 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param address Address of the MemoryBlock Requested
 	 * @return MemoryBlock
 	 */
-	public MemoryBlock getBlock(Integer address){
-		if(DEBUG_LEVEL >= 1)System.out.println("Memory.getBlock(" + address + ")");
-		if(address == null)throw new NullPointerException("bAddress Can Not Be Null");
-		if(address < 0)throw new ArrayIndexOutOfBoundsException("bAddress Must Be Positive");
+	public MemoryBlock getBlock(Integer bAddress, Integer size){
+		if(DEBUG_LEVEL >= 1)System.out.println("Memory.getBlock(" + bAddress + ", " + size + ")");
 		
-		Integer mAddress = address / blockSize;
+		// Validation
+		if(bAddress == null)throw new NullPointerException("bAddress Can Not Be Null");
+		if(bAddress < 0)throw new ArrayIndexOutOfBoundsException("bAddress Must Be Positive");
 		
-		if(memory[mAddress] == null){
-			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + mAddress + "] MISS, Creating MemoryBlock");
-			
-			cacheStats.BLOCKREAD_MISS++;
-			
-			MemoryBlock newMB = new MemoryBlock(blockSize, address);
-			
-			for(int i = 0; i < blockSize; i++){
-				if(DEBUG_LEVEL >= 4)System.out.println("...Creating MemoryElement(" + i + ", 0)");
-				newMB.setElement(i, new MemoryElement(i, (byte)0));
-			}
-			
-			memory[mAddress] = newMB;
-		}else{
-			if(DEBUG_LEVEL >= 3)System.out.println("...memory[" + address + "] HIT");
-			cacheStats.BLOCKREAD_HIT++;
-		}
+		if(size == null)throw new NullPointerException("size Can Not Be Null");
+		if(size < 1)throw new ArrayIndexOutOfBoundsException("size Must Be Greater Than Zero");
 		
 		cacheStats.ACCESS++;
 		
-		MemoryBlock newMB = memory[mAddress].clone();
+		MemoryBlock newMB = new MemoryBlock(size, bAddress);
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + newMB + ")");
+		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getBlock()...Starting at " + bAddress + " Going to " + (bAddress + size - 1));
+		
+		for(int i = bAddress; i < bAddress + size; i++){
+			if(memory[i] == null){
+				if(DEBUG_LEVEL >= 5)System.out.println("Memory.getBlock()...memory[" + i + "] MISS, Creating MemoryBlock");
+				memory[i] = new MemoryElement(i, (byte)0);
+			}else{
+				if(DEBUG_LEVEL >= 5)System.out.println("Memory.getBlock()...memory[" + i + "] HIT");
+			}
+			Integer offset = i % size;
+			newMB.setElement(offset, memory[i].clone());
+		}
+		
+		cacheStats.BLOCKREAD_HIT++;
+		
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory.getBlock()...Finished");
 		
 		return newMB;
 	}
@@ -135,32 +131,28 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param block The MemoryBlock being written
 	 * @return boolean If the memory block was written true, otherwise false
 	 */
-	public boolean putBlock(MemoryBlock block){
+	public void putBlock(MemoryBlock block){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.putBlock(" + block.getBlockAddress() + ")");
+		
+		// Validate
 		if(block == null)throw new NullPointerException("block Can Not Be Null");
+		if((block.getBlockAddress() + block.getSize() - 1) > totalSize)throw new IllegalArgumentException("block Can Not Be Greater Than total Size");
 		
-		Integer memoryBlock = block.getBlockAddress() / blockSize;
+		// Write MemoryElements to Memory
+		MemoryElementIterator meIterator = block.getIterator();
 		
-		memory[memoryBlock] = block;
+		while(meIterator.hasNext()){
+			MemoryElement element = meIterator.next();
+			
+			if(DEBUG_LEVEL >= 4)System.out.println("Memory.putBlock()...Writing memory[" + element.getElementAddress() + "]");
+			
+			memory[element.getElementAddress()].setData(element.getData());
+		}
 		
 		cacheStats.ACCESS++;
 		cacheStats.BLOCKWRITE_HIT++;
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning True");
-		return true;
-	}
-	
-	protected MemoryBlock cloneMemory(Integer memoryBlock){
-		if(DEBUG_LEVEL >= 1)System.out.println("Memory.cloneMemory(MemoryBlock)");
-		MemoryBlock newMB = new MemoryBlock(blockSize, memory[memoryBlock].getBlockAddress());
-		
-		for(int i = 0; i < blockSize; i++){
-			newMB.setElement(i, memory[memoryBlock].getElement(i).clone());
-		}
-		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + newMB);
-		
-		return newMB;
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory.putBlock()...Finished");
 	}
 
 	@Override
@@ -169,7 +161,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		
 		if(cacheController == null)throw new NullPointerException("cacheController Can Not Be Null");
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory.registerChildCache()...Finished");
 		
 		return childCaches.add(cacheController);
 	}
@@ -180,7 +172,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		
 		if(cacheController == null)throw new NullPointerException("cacheController Can Not Be Null");
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory.unRegisterChildCache()...Finished");
 		
 		return childCaches.remove(cacheController);
 	}
@@ -193,7 +185,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 			childCacheIterator.next().onWriteMiss(address);
 		}
 		// No Local Implementation Needed
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory.onWriteMiss()...Finished");
 	}
 
 	@Override
@@ -204,7 +196,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 			childCacheIterator.next().onWriteUpdate(address);
 		}
 		// No Local Implementation Needed
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory.onWriteUpdate()...Finished");
 	}
 
 	@Override
@@ -215,7 +207,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 			childCacheIterator.next().onReadMiss(address);
 		}
 		// No Local Implementation Needed
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("Memory.onReadMiss()...Finished");
 	}
 	
 	public CacheStatistics getMemoryStats(){

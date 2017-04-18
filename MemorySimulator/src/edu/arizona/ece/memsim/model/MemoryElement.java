@@ -11,8 +11,8 @@ package edu.arizona.ece.memsim.model;
  */
 public class MemoryElement {
 	
-	private Byte data;
-	private Integer eAddress;
+	protected Byte data;
+	protected Integer eAddress;
 	
 	/**
 	 * Constructor
@@ -50,6 +50,10 @@ public class MemoryElement {
 	 */
 	public void setData(Byte bite){
 		data = bite;
+	}
+	
+	public Integer getElementAddress(){
+		return eAddress;
 	}
 	
 	@Override

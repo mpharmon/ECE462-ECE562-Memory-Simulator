@@ -31,6 +31,11 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	protected Integer cacheLevel;
 	
 	/**
+	 * Block Size (Number of Elements)
+	 */
+	protected Integer blockSize;
+	
+	/**
 	 * Access Time of the Cache
 	 */
 	protected Integer accessTime;
@@ -122,7 +127,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * @throws InterruptedException 
 	 */
 	private CacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime) throws InterruptedException{
-		if(DEBUG_LEVEL >= 1)System.out.println("CacheController(" + level + ", " + tSize + ", " + bSize + ", " + assoc + ", " + aTime);
+		if(DEBUG_LEVEL >= 1)System.out.println("\nCacheController(" + level + ", " + tSize + ", " + bSize + ", " + assoc + ", " + aTime + ")");
 		
 		if(tSize == null)throw new NullPointerException("tSize Can Not Be Null");
 		if(tSize < 1)throw new IllegalArgumentException("tSize Must Be Positive");
@@ -136,11 +141,12 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(aTime == null)throw new NullPointerException("aTime Can Not Be Null");
 		if(aTime < 1)throw new IllegalArgumentException("Access Time Must Be Positive");
 		
-		cache = new Cache(tSize, bSize, assoc, this);
+		cache = new Cache(tSize, bSize, assoc, this, level);
 		
 		cacheLevel = level;
 		accessTime = aTime;
 		cacheCoherencyEnabled = false;
+		blockSize = bSize;
 		
 		if(tSize % bSize != 0)throw new ArrayIndexOutOfBoundsException("Block Size Not Aligned with Total Size");
 		
@@ -149,7 +155,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		
 		cacheStats = new CacheStatistics();
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("CacheController()...Finished");
 	}
 	
 	/**
@@ -157,11 +163,9 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * 
 	 * @param eAddress Address of the Memory Locator Desired
 	 * @return MemoryResult 
-	 * @throws NullPointerException When address is NULL
-	 * @throws IllegalArgumentException When address is less than Zero
-	 * @throws IllegalAccessException When Child Caches Are Present
+	 * @throws Exception 
 	 */
-	public MemoryResult get(Integer eAddress) throws NullPointerException, IllegalArgumentException, IllegalAccessException{
+	public MemoryResult get(Integer eAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.get(" + eAddress + ")");
 		
 		// Prevent Element Access if ChildCache(s) is/are Present
@@ -176,7 +180,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		
 		returnValue.addMemoryElement(cache.get(eAddress));
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
+		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + " CacheController.get()...Finished");
 		
 		cacheStats.ACCESS++;
 		//cacheStats.READ++;
@@ -187,14 +191,13 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	/**
 	 * Gets a MemoryBlock from Cache, and loads it from a Parent Cache or Parent Memory If Necessary
 	 * 
+	 * 
 	 * @param bAddress Address of the MemoryBlock desired
 	 * @return MemoryBlock
-	 * @throws NullPointerException When address is NULL
-	 * @throws IllegalArgumentException When address is less than zero
-	 * @throws IllegalAccessException
+	 * @throws Exception 
 	 */
-	public MemoryBlock getBlock(Integer bAddress) throws IllegalAccessException, NullPointerException, IllegalArgumentException {
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.getBlock(" + bAddress + ")");
+	public MemoryBlock getBlock(Integer bAddress, Integer size) throws Exception {
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-CacheController.getBlock(" + bAddress + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
 		if(childCaches.size() == 0)throw new IllegalAccessException("Can Not Call getBlock if Child Caches Are Not Present");
@@ -203,12 +206,14 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(bAddress == null)throw new NullPointerException("address Can Not Be Null");
 		if(bAddress < 0)throw new IllegalArgumentException("address Must Be Greater Than Zero");
 		
-		MemoryBlock returnValue = cache.getBlock(bAddress);
+		if(size == null)throw new NullPointerException("size Can Not Be Null");
+		if(size <= 0)throw new IllegalArgumentException("size Must Be Greater Than Zero");
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
+		MemoryBlock returnValue = cache.getBlock(bAddress, size);
+		
+		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.getBlock()...Finished");
 		
 		cacheStats.ACCESS++;
-		//cacheStats.BLOCKREAD++;
 		
 		return returnValue;
 	}
@@ -218,11 +223,9 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * 
 	 * @param eAddress Address of the data being written
 	 * @param bite Byte of the data being written
-	 * @throws NullPointerException When address or byte is null
-	 * @throws IllegalArgumentException When address is less than zero
-	 * @throws IllegalAccessException When Child Caches Are Present
+	 * @throws Exception 
 	 */
-	public void put(Integer eAddress, Byte bite) throws IllegalAccessException, NullPointerException, IllegalArgumentException {
+	public void put(Integer eAddress, Byte bite) throws Exception {
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.put(" + eAddress + ", " + bite +")");
 		
 		//Prevent Element Access if ChildCache(s) is/are Present
@@ -246,10 +249,9 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * Puts a MemoryBlock Into This Level of Cache
 	 * 
 	 * @param block MemoryBlock to be written
-	 * @throws NullPointerException When block is NULL
-	 * @throws IllegalAccessException When Method is Called when childCache(s) are Present
+	 * @throws Exception 
 	 */
-	public void putBlock(MemoryBlock block) throws IllegalAccessException, NullPointerException{
+	public void putBlock(MemoryBlock block) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.putBlock(" + block.getBlockAddress() + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
@@ -263,31 +265,31 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		cacheStats.ACCESS++;
 		//cacheStats.BLOCKWRITE++;
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("CacheController.putBlock()...Finished");
 	}
 	
 	@Override
 	public boolean registerChildCache(CacheController newChild) {
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.registerChildCache(" + newChild + ")");
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-CacheController.registerChildCache()");
 		
 		if(newChild == null)throw new NullPointerException("newChild Can Not Be Null");
 		
 		boolean returnValue = childCaches.add(newChild);
 		
-		if(DEBUG_LEVEL >= 1)System.out.println("...Returning " + returnValue);
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-Cache.registerChildCache()...Finished");
 		
 		return returnValue;
 	}
 
 	@Override
 	public boolean unRegisterChildCache(CacheController oldChild) {
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.unRegisterChildCache(" + oldChild + ")");
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-CacheController.unRegisterChildCache(" + oldChild + ")");
 		
 		if(oldChild == null)throw new NullPointerException("oldChild Can Not Be Null");
 		
 		boolean returnValue = childCaches.remove(oldChild);
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
+		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.unRegisterChildCache()...Finished");
 		
 		return returnValue;
 	}
@@ -305,12 +307,12 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 			cacheStats.INVALIDATE++;
 		}
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.onWriteMiss()...Finished");
 	}
 
 	@Override
 	public void onReadMiss(Integer address) {
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.onReadMiss(" + address + ")");
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-CacheController.onReadMiss(" + address + ")");
 		
 		if(cacheCoherencyEnabled){
 			Iterator<CacheController> childCacheIterator = childCaches.iterator();
@@ -320,12 +322,12 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 			// TODO: Handle - Write Back Value at Address to Memory
 		}
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.onReadMiss()...Finished");
 	}
 
 	@Override
 	public void onWriteUpdate(Integer address) {
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.onWriteUpdate(" + address + ")");
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-CacheController.onWriteUpdate(" + address + ")");
 		
 		if(cacheCoherencyEnabled){
 			Iterator<CacheController> childCacheIterator = childCaches.iterator();
@@ -336,7 +338,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 			// TODO: Handle Locally
 		}
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.onWriteUpdate()...Finished");
 	}
 	
 	public CacheStatistics getCacheStats(){

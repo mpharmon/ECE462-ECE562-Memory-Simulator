@@ -1,7 +1,5 @@
 package edu.arizona.ece.memsim.model;
 
-import java.util.concurrent.ArrayBlockingQueue;
-
 /**
  *  Models the Physical Cache
  * 
@@ -21,6 +19,8 @@ public class Cache {
 	 */
 	protected static Integer DEBUG_LEVEL = 0;
 	
+	protected Integer cacheLevel;
+	
 	/**
 	 * Link Back to Cache Controller
 	 */
@@ -35,6 +35,11 @@ public class Cache {
 	 * Block Size of the Cache
 	 */
 	protected Integer blockSize;
+	
+	/**
+	 * Total Number of Blocks In Memory (Used When Iterating Through Memory Array)
+	 */
+	protected Integer numBlocks;
 	
 	/**
 	 * Number of Offset Bits of the Cache
@@ -52,14 +57,14 @@ public class Cache {
 	protected Integer associativity;
 	
 	/**
-	 * List Holding the MemoryBlocks Currently in this Cache
+	 * List Holding the {@link MemoryBlock}s Currently in this Cache
 	 */
 	protected MemoryBlock[] memory;
 	
 	/**
 	 * Queue Holding the Memory Address of the Least Recently Used (LRU) {@link MemoryBlock}
 	 */
-	protected ArrayBlockingQueue<Integer>[] loadQueue;
+	protected LoadQueue[] loadQueue;
 	
 	protected CacheStatistics cacheStats;
 	
@@ -74,9 +79,9 @@ public class Cache {
 	 * @throws NullPointerException When newSize is NULL
 	 * @throws IllegalArgumentException When newSize is Negative
 	 */
-	@SuppressWarnings("unchecked")
-	public Cache(Integer tSize, Integer bSize, Integer assoc, CacheController cc) throws InterruptedException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache(" + tSize + ", " + bSize + ", " + assoc +", CacheController)");
+	//@SuppressWarnings("unchecked")
+	public Cache(Integer tSize, Integer bSize, Integer assoc, CacheController cc, Integer level) throws InterruptedException{
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache(" + tSize + ", " + bSize + ", " + assoc +", CacheController, " + level + ")");
 		
 		if(tSize == null)throw new NullPointerException("tSize Can Not Be Null");
 		if(tSize < 1)throw new IllegalArgumentException("tSize Must Be Greater Than One");
@@ -87,9 +92,11 @@ public class Cache {
 		if(assoc == null)throw new NullPointerException("bSize Can Not Be Null");
 		if(assoc < 0)throw new IllegalArgumentException("bSize Must Be Positive");
 		
+		cacheLevel = level;
 		cacheController = cc;
 		totalSize = tSize;
 		blockSize = bSize;
+		numBlocks = totalSize / blockSize;
 		offsetShift = (int)(Math.log(blockSize) / Math.log(2));
 		associativity = assoc;
 		
@@ -106,21 +113,25 @@ public class Cache {
 			Integer waySize = totalSize / associativity;
 					
 			if(tSize % waySize != 0)throw new ArrayIndexOutOfBoundsException("Associativity Not Aligned with Total Size");
-				
-			loadQueue = (ArrayBlockingQueue<Integer>[]) new ArrayBlockingQueue<?>[associativity];
+			
+			loadQueue = new LoadQueue[associativity];
+			
+			Integer mAddress = new Integer(0);
+			
 			for(int i = 0; i < associativity; i++){
-				loadQueue[i] = new ArrayBlockingQueue<Integer>(wayRows);
+				loadQueue[i] = new LoadQueue(wayRows);
 				for(int j = 0; j < wayRows; j++){
-					loadQueue[i].put(new Integer(i * wayRows + j));
-					if(DEBUG_LEVEL == 5)System.out.println("Way " + i + " Line " + (i * wayRows + j));
+					loadQueue[i].put(new Integer(mAddress));
+					mAddress++;
 				}
 			}
 		};
 		
 		// Create Storage Array 
-		Integer numBlocks = tSize / bSize;
-		if(DEBUG_LEVEL >= 4)System.out.println("...Creating memory[" + numBlocks + "]");
+		if(DEBUG_LEVEL >= 4)System.out.println("L"+ cacheLevel + "-Cache()...Creating memory[" + numBlocks + "]");
 		memory = new MemoryBlock[numBlocks];
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache()...Finished");
 	}
 	
 	/**
@@ -128,80 +139,138 @@ public class Cache {
 	 * 
 	 * @param eAddress Element Address 
 	 * @return The MemoryElement Requested
-	 * @throws IllegalAccessException 
-	 * @throws NullPointerException When eAddress is NULL
+	 * @throws Exception 
 	 * @throws IndexOutOfBoundsException When eAddress is Less Than Zero
 	 */
-	public MemoryElement get(Integer eAddress) throws IllegalAccessException, NullPointerException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.get(" + eAddress + ")");
+	public MemoryElement get(Integer eAddress) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.get(" + eAddress + ")");
 		
 		// Validation
 		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
 		if(eAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Be Positive (Given " + eAddress);
 		
-		Integer bAddress = eAddress / blockSize;
-		Integer offset = eAddress % blockSize;
+		// Reminder: Integer Division
+		Integer bAddress = (eAddress / blockSize) * blockSize;
+		Integer offset = eAddress - bAddress;
 		
-		for(Integer mAddress : getPossibleMemoryAddressArray(eAddress)){
-			if(DEBUG_LEVEL >= 3)System.out.print("...Looking in Memory[" + mAddress + "] for bAddress " + bAddress);
-			if(memory[mAddress] != null){
-				if(memory[mAddress].getBlockAddress().equals(bAddress)){
-					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
-					// Adjust loadQueue
-					cacheController.cacheStats.READ_HIT++;
-					return memory[mAddress].getElement(offset);
-				}
-				if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
+		if(DEBUG_LEVEL >= 4)System.out.println("L" + cacheLevel + "-Cache.get()...bAddress: " + bAddress + " offset:" + offset);
+		
+		Integer mAddress = findBlockInMemory(bAddress);
+		
+		if(mAddress != null){
+			if(memory[mAddress].getBlockAddress().equals(bAddress)){
+				if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.get()...Cache Hit");
+				
+				if(associativity > 0)loadQueue[getSet(bAddress)].roll(mAddress);
+				
+				cacheController.cacheStats.READ_HIT++;
+				
+				if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.get()...Finished");
+				
+				return memory[mAddress].getElement(offset);
 			}
-			if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
 		}
 		
 		// If We Get Here We have a Miss
 		cacheController.cacheStats.READ_MISS++;
-		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
-		Integer mAddress = getNextWriteLocation(bAddress);
+		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.get()...Cache Miss");
+		Integer wAddress = getNextWriteLocationLRU(bAddress);
 		//Write Back If Necessary
-		if(memory[mAddress] != null)writeBack(mAddress);
+		if(memory[wAddress] != null)writeBack(wAddress);
 		//Resolve Miss
-		resolveMiss(mAddress, bAddress);
+		resolveMiss(wAddress, bAddress);
 		//Return Value
-		MemoryElement mElement = memory[mAddress].getElement(offset);
-		if(DEBUG_LEVEL >= 2)System.out.println("Returning MemoryElement " + mElement);
+		MemoryElement mElement = memory[wAddress].getElement(offset).clone();
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.get()...Finished");
+		
 		return mElement;
 	}
 	
-	public MemoryBlock getBlock(Integer bAddress) throws IllegalAccessException, NullPointerException, IllegalArgumentException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.getBlock(" + bAddress + ")");
+	/**
+	 * Pulls a Block of Memory from this cache and prepares it for insertion into another level of cache
+	 * 
+	 * @param bAddress Block Address of Cache to Pull
+	 * @param size Number of Memory Elements
+	 * @return 
+	 * @throws Exception
+	 */
+	public MemoryBlock getBlock(Integer bAddress, Integer size) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getBlock(" + bAddress + ", " + size + ")");
 		
 		// Validation
-		if(bAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
-		if(bAddress < 0)throw new IndexOutOfBoundsException("eAddress Must Be Positive (Given " + bAddress);
+		if(bAddress == null)throw new NullPointerException("address Can Not Be NULL");
+		if(bAddress < 0)throw new IndexOutOfBoundsException("address Must Be Positive (Given: " + bAddress);
 		
-		// Cache Hit?
-		for(Integer mAddress : getPossibleMemoryAddressArray(bAddress)){
-			if(DEBUG_LEVEL >= 3)System.out.print("...Looking in Memory[" + mAddress + "] for bAddress " + bAddress);
-			if(memory[mAddress] != null){
-				if(memory[mAddress].getBlockAddress().equals(bAddress)){
-					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
-					cacheController.cacheStats.BLOCKREAD_HIT++;
-					// Adjust loadQueue
-					return memory[mAddress];
-				}
-				if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
+		if(size == null)throw new NullPointerException("size Can Not Be NULL");
+		if(size < 0)throw new IndexOutOfBoundsException("size Must Be Positive (Given: " + size);
+		if(size > blockSize)throw new IllegalArgumentException("size (" + size + ") Must Be Less Than blockSize (" + blockSize +")");
+		
+		Integer localStartBlockAddress = (bAddress / blockSize) * blockSize;
+		Integer localEndBlockAddress = ((bAddress + size - 1) / blockSize) * blockSize;
+		
+		if(DEBUG_LEVEL >= 4)System.out.println("L" + cacheLevel + "-Cache.getBlock()...localStartBlockAddress: " + localStartBlockAddress + " localEndBlockAddress: " + localEndBlockAddress);
+		
+		Integer localStartMemoryAddress = findBlockInMemory(localStartBlockAddress);
+		Integer localEndMemoryAddress = findBlockInMemory(localEndBlockAddress);
+		
+		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Checking For Start and End Block Miss");
+		
+		if(localStartMemoryAddress != null && localEndMemoryAddress != null){// Found Both Start and End Blocks
+			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Start and End Block Hit");
+
+			//TODO: Correct Exception Thrown
+			if(localEndMemoryAddress - localStartMemoryAddress > 1 || localEndMemoryAddress - localStartMemoryAddress < 0)throw new Exception("start and end are not in adjcent MemoryBlocks");
+			
+			cacheController.cacheStats.BLOCKREAD_HIT++;
+		}else{// Did Not Find Start and/or End Blocks
+			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Start and/or End Block Miss");
+			
+			// Count as a MISS if one or both Blocks are not in memory
+			cacheController.cacheStats.BLOCKREAD_MISS++;
+			
+			if(localStartMemoryAddress == null){// Resolve Start Block Miss
+				if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Resolving Start Block Miss");
+				Integer mAddress = getNextWriteLocationLRU(localStartBlockAddress);
+				// Write Back
+				if(memory[mAddress] != null)writeBack(mAddress);
+				// Resolve Miss
+				resolveMiss(mAddress, localStartBlockAddress);
+				localStartMemoryAddress = findBlockInMemory(localStartBlockAddress);
 			}
-			if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
+			
+			if(localEndMemoryAddress == null && !localStartBlockAddress.equals(localEndBlockAddress)){// Resolve End Block Miss
+				if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Resolving End Block Miss");
+				Integer mAddress = getNextWriteLocationLRU(localEndBlockAddress);
+				// Write Back
+				if(memory[mAddress] != null)writeBack(mAddress);
+				// Resolve Miss
+				resolveMiss(mAddress, localEndBlockAddress);
+			}
+			localEndMemoryAddress = findBlockInMemory(localEndBlockAddress);
 		}
 		
-		// If We Get Here We Have a Cache Miss
-		cacheController.cacheStats.BLOCKREAD_MISS++;
-		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
-		Integer mAddress = getNextWriteLocation(bAddress);
-		//Write Back If Necessary
-		if(memory[mAddress] != null)writeBack(mAddress);
-		//Resolve Miss
-		resolveMiss(mAddress, bAddress);
-		//Return Value
-		return memory[mAddress].clone();
+		if(DEBUG_LEVEL >= 4)System.out.println("L" + cacheLevel + "-Cache.getBlock()...localStartMemoryAddress: " + localStartMemoryAddress + " localEndMemoryAddress: " + localEndMemoryAddress);
+		
+		MemoryBlock newMB = new MemoryBlock(size, bAddress);
+		
+		if(DEBUG_LEVEL >= 4)System.out.println("L" + cacheLevel + "-Cache.getBlock()...Starting at " + localStartBlockAddress + " going to " + localEndBlockAddress + " (Block Addresses)");
+		
+		for(int i = 0; i < size; i++){
+			Integer localElementAddress = localStartBlockAddress + i;
+			Integer localElementBlockAddress = (localElementAddress / blockSize) * blockSize;
+			Integer localElementBlockOffset = (bAddress + i) % blockSize;
+			
+			if(DEBUG_LEVEL >= 5)System.out.println("L" + cacheLevel + "-Cache.getBlock()...localElementBlockAddress: " + localElementBlockAddress + " localElementBlockOffset:" + localElementBlockOffset);
+			
+			loadQueue[getSet(localElementBlockAddress)].roll(findBlockInMemory(localElementBlockAddress));
+			
+			newMB.setElement(i, memory[findBlockInMemory(localElementBlockAddress)].getElement(localElementBlockOffset));
+		}
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Finished");
+		
+		return newMB;
 	}
 	
 	/**
@@ -209,12 +278,10 @@ public class Cache {
 	 * 
 	 * @param eAddress Memory Location to Place the block
 	 * @param bite Byte to be Written
-	 * @throws NullPointerException When block or memAddress is NULL
-	 * @throws IllegalAccessException 
-	 * @throws IndexOutOfBoundsException
+	 * @throws Exception 
 	 */
-	public void put(Integer eAddress, Byte bite) throws NullPointerException, IndexOutOfBoundsException, IllegalAccessException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.put(" + eAddress + ", " + bite + ")");
+	public void put(Integer eAddress, Byte bite) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.put(" + eAddress + ", " + bite + ")");
 	
 		// Validation
 		if(eAddress == null)throw new NullPointerException("eAddress Can Not Be NULL");
@@ -222,145 +289,208 @@ public class Cache {
 		
 		if(bite == null)throw new NullPointerException("bite Can Not Be NULL");
 		
-		Integer bAddress = eAddress / blockSize * blockSize;
-		Integer offset = eAddress % blockSize;
+		// Reminder: Integer Division
+		Integer bAddress = (eAddress / blockSize) * blockSize;
+		Integer offset = eAddress - bAddress;
 		
-		// Cache Hit?
-		for(Integer mAddress : getPossibleMemoryAddressArray(eAddress)){
-			if(DEBUG_LEVEL >= 3)System.out.print("...Looking in Memory[" + mAddress + "] for bAddress " + bAddress);
-			if(memory[mAddress] != null){
-				if(memory[mAddress].getBlockAddress().equals(bAddress)){
-					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
-					cacheController.cacheStats.WRITE_HIT++;
-					// Adjust loadQueue
-					memory[mAddress].getElement(offset).setData(bite);
-					return;
-				}
-				if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
+		Integer mAddress = findBlockInMemory(bAddress);
+		
+		if(mAddress != null){
+			if(memory[mAddress].getBlockAddress().equals(bAddress)){
+				if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.put()...Cache Hit");
+				
+				if(associativity > 0)loadQueue[getSet(bAddress)].roll(mAddress);
+				
+				cacheController.cacheStats.WRITE_HIT++;
+				
+				memory[mAddress].getElement(offset).setData(bite);
+				
+				if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.put()...Finished");
+				
+				return;
 			}
-			if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
 		}
 		
 		// If We Get Here We have a Miss
-		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
+		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.put()...Cache Miss");
 		cacheController.cacheStats.WRITE_MISS++;
-		Integer mAddress = getNextWriteLocation(eAddress);
+		Integer wAddress = getNextWriteLocationLRU(bAddress);
 		//Write Back If Necessary
-		if(memory[mAddress] != null)writeBack(mAddress);
+		if(memory[wAddress] != null)writeBack(wAddress);
 		//Resolve Miss
-		resolveMiss(mAddress, eAddress);
+		resolveMiss(wAddress, bAddress);
 		//Update Value
-		memory[mAddress].getElement(offset).setData(bite);
+		memory[wAddress].getElement(offset).setData(bite);
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.put()...Finished");
 	}
 	
-	public void putBlock(MemoryBlock block) throws IllegalAccessException, NullPointerException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.putBlock(" + block.getBlockAddress() + ")");
+	public void putBlock(MemoryBlock block) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.putBlock([blockAddress]" + block.getBlockAddress() + ")");
 		
 		// Validation
 		if(block == null)throw new NullPointerException("block Can Not Be NULL");
 		
-		// Cache Hit?
-		for(Integer mAddress : getPossibleMemoryAddressArray(block.getBlockAddress())){
-			if(DEBUG_LEVEL >= 3)System.out.print("...Looking in Memory[" + mAddress + "] for bAddress " + block.getBlockAddress());
-			if(memory[mAddress] != null){
-				if(memory[mAddress].getBlockAddress().equals(block.getBlockAddress())){
-					if(DEBUG_LEVEL >= 3)System.out.println("...HIT");
-					cacheController.cacheStats.BLOCKWRITE_HIT++;
-					// Adjust loadQueue
-					memory[mAddress] = block;
-					return;
-				}
-				if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
+		Integer localStartBlockAddress = (block.getBlockAddress() / blockSize) * blockSize;
+		Integer localEndBlockAddress = ((block.getBlockAddress() + block.getSize() - 1) / blockSize) * blockSize;
+		
+		if(DEBUG_LEVEL >= 4)System.out.println("L" + cacheLevel + "-Cache.putBlock()...localStartBlockAddress: " + localStartBlockAddress + " localEndBlockAddress: " + localEndBlockAddress);
+		
+		Integer localStartMemoryAddress = findBlockInMemory(localStartBlockAddress);
+		Integer localEndMemoryAddress = findBlockInMemory(localEndBlockAddress);
+		
+		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Checking For Start and End Block Miss");
+		
+		if(localStartMemoryAddress != null && localEndMemoryAddress != null){// Found Both Start and End Blocks
+			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Start and End Block Hit");
+			
+			//TODO: Correct Exception Thrown
+			if(localEndMemoryAddress - localStartMemoryAddress > 1 || localEndMemoryAddress - localStartMemoryAddress < 0)throw new Exception("start and end are not in adjcent MemoryBlocks");
+			
+			cacheController.cacheStats.BLOCKWRITE_HIT++;
+		}else{// Did not Find Start and/or End Blocks
+			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Start and/or End Block Miss");
+			
+			// Count as a MISS if one or both Blocks are not in memory
+			cacheController.cacheStats.BLOCKWRITE_MISS++;
+			
+			if(localStartMemoryAddress == null){// Resolve Start Block Miss
+				if(DEBUG_LEVEL >= 4)System.out.println("L"+ cacheLevel + "-Cache.putBlock()...Resolving Start Block Miss");
+				Integer mAddress = getNextWriteLocationLRU(localStartBlockAddress);
+				// Write Back
+				if(memory[mAddress] != null)writeBack(mAddress);
+				// Resolve Miss
+				resolveMiss(mAddress, localStartBlockAddress);
+				localStartMemoryAddress = findBlockInMemory(localStartBlockAddress);
 			}
-			if(DEBUG_LEVEL >= 3)System.out.println("...MISS");
+			
+			// If localEndBlockAddress is Equal to localStartblockAddress, That Miss was Resolved Above
+			if(localEndBlockAddress == null && !localStartBlockAddress.equals(localEndBlockAddress)){// Resolve End Block Miss
+				if(DEBUG_LEVEL >= 4)System.out.println("L"+ cacheLevel + "-Cache.putBlock()...Resolving End Block Miss");
+				Integer mAddress = getNextWriteLocationLRU(localEndBlockAddress);
+				// Write Back
+				if(memory[mAddress] != null)writeBack(mAddress);
+				// Resolve Miss
+				resolveMiss(mAddress, localEndBlockAddress);
+			}
+			localEndBlockAddress = findBlockInMemory(localEndBlockAddress);
 		}
 		
-		// If We Get Here We have a Miss
-		if(DEBUG_LEVEL >= 3)System.out.println("...Cache Miss");
-		cacheController.cacheStats.BLOCKWRITE_MISS++;
-		Integer mAddress = getNextWriteLocation(block.getBlockAddress());
-		//Write Back If Necessary
-		if(memory[mAddress] != null)writeBack(mAddress);
-		//Resolve Miss
-		resolveMiss(mAddress, block.getBlockAddress());
-		//Update Value
-		memory[mAddress] = block;
+		if(DEBUG_LEVEL >= 5)System.out.println("L"+ cacheLevel + "-Cache.putBlock()...Getting MemoryElementIterator");
+		MemoryElementIterator mbIterator = block.getIterator();
+		
+		while(mbIterator.hasNext()){
+			if(DEBUG_LEVEL >= 5)System.out.println("L"+ cacheLevel + "-Cache.putBlock()...Writing memoryElement to Cache");
+			
+			MemoryElement nextME = mbIterator.next();
+			
+			Integer elementBlockAddress = (nextME.getElementAddress() / blockSize) * blockSize;
+			Integer elementBlockOffset = nextME.getElementAddress() % blockSize;
+			
+			if(DEBUG_LEVEL >= 4)System.out.println("L" + cacheLevel + "-Cache.putBlock()...elementBlockAddress: " + elementBlockAddress + " elementBlockOffset: " + elementBlockOffset);
+			
+			Integer mAddress = findBlockInMemory(elementBlockAddress);
+			
+			// Validate mAddress
+			if(mAddress == null)throw new NullPointerException("mAddress Can Not Be NULL");
+			
+			loadQueue[getSet(elementBlockAddress)].roll(mAddress);
+			
+			memory[mAddress].setElement(elementBlockOffset, nextME);
+		}
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.putBlock() Finished");
 	}
 	
-	private Integer[] getPossibleMemoryAddressArray(Integer address){
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.getPossibleMemoryAddressArray(" + address + ")");
+	protected final Integer[] getPossibleMemoryAddressArray(Integer address){
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray(" + address + ")");
+		
 		Integer[] returnArray = new Integer[wayRows];
+		
 		if(associativity == 0){// Direct Mapped Cache
-			if(DEBUG_LEVEL >= 3)System.out.print("...Direct Mapped Cache, Only 1 Possible Location: ");
+			if(DEBUG_LEVEL >= 3)System.out.print("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray()...Direct Mapped Cache, Only 1 Possible Location: ");
 			returnArray[0] = (address & ((totalSize / blockSize - 1) << offsetShift)) >> offsetShift;
 			if(DEBUG_LEVEL >= 4)System.out.println(returnArray[0]);
 		}else if(associativity == 1){// Fully Associative Cache
-			if(DEBUG_LEVEL >= 3)System.out.print("...Fully Associatve Cache, " + wayRows + " Possible Locations");
-			for(int i = 0; i < wayRows; i++){
-				returnArray[i] = i;
-				if(DEBUG_LEVEL >= 4)System.out.println("..." + i);
-			}
+			if(DEBUG_LEVEL >= 3)System.out.print("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray()...Fully Associatve Cache, " + wayRows + " Possible Locations");
+			for(int i = 0; i < wayRows; i++)returnArray[i] = i;
 		}else{// Set Associative Cache
 			Integer set = (address & ((associativity - 1) << offsetShift)) >> offsetShift;
 			Integer setSize = totalSize / blockSize / associativity;
 			Integer setStart = set * setSize;
-			if(DEBUG_LEVEL >= 3)System.out.println("...Set Associatve Cache, " + setSize + " Possible Locations");
+			if(DEBUG_LEVEL >= 3)System.out.print("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray()...Set Associatve Cache, " + setSize + " Possible Locations: ");
 			for(int i = 0; i < setSize; i++){
+				if(DEBUG_LEVEL >= 3)System.out.print(" " + (setStart + i));
 				returnArray[i] = setStart + i;
-				if(DEBUG_LEVEL >= 4)System.out.println("..." + (setStart + i));
 			}
+			if(DEBUG_LEVEL >= 3)System.out.println("");
 		}
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getPossibleMemoryAddressArray()...Finished");
+		
 		return returnArray;
 	}
 	
-	private Integer getNextWriteLocation(Integer address){
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.getNextWriteLocation(" + address + ")");
+	/**
+	 * Gets the Next Write Location Based on LRU Replacement Policy
+	 * 
+	 * @param address Address (Block or Element) to find the next Memory Address to write
+	 * @return
+	 */
+	protected final Integer getNextWriteLocationLRU(Integer address){
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getNextWriteLocationLRU(" + address + ")");
 		Integer nextLocation;
 		if(associativity == 0){// Direct Mapped Cache
 			nextLocation = (address & ((totalSize / blockSize - 1) << offsetShift)) >> offsetShift;
 		}else if(associativity == 1){// Fully Associative Cache
-			nextLocation = loadQueue[0].poll();
-			loadQueue[0].add(nextLocation);
+			nextLocation = loadQueue[0].getAndRoll();
 		}else{// Set Associative Cache
-			Integer set = (address & ((associativity - 1) << offsetShift)) >> offsetShift;
-			nextLocation = loadQueue[set].poll();
-			loadQueue[set].add(nextLocation);
+			nextLocation = loadQueue[getSet(address)].getAndRoll();
 		}
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getNextWriteLocationLRU()...Finished...Returning: " + nextLocation);
+		
 		return nextLocation;
 	}
 	
-	private void resolveMiss(Integer mAddress, Integer address) throws IllegalAccessException, NullPointerException, IllegalArgumentException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.resolveMiss(" + mAddress + ", " + address + ")");
+	/**
+	 * Resolves a Cache Miss at Block Address bAddress and places it at mAddress
+	 * 
+	 * @param mAddress Memory Address (index) to place the new block
+	 * @param bAddress Block Address to place in the mAddress
+	 * @throws Exception
+	 */
+	protected final void resolveMiss(Integer mAddress, Integer bAddress) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss(" + mAddress + ", " + bAddress + ")");
 		
 		MemoryBlock block;
 		
 		if(cacheController.parentMemory != null){
-			if(DEBUG_LEVEL >= 3)System.out.println("...Getting From Parent Memory");
-			block = cacheController.parentMemory.getBlock(address);
-			if(DEBUG_LEVEL >= 4)System.out.println("Cache.resolveMiss(" + address + ")\n...Got " + block + ")");
+			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss()...Getting From Parent Memory");
+			block = cacheController.parentMemory.getBlock(bAddress, blockSize);
 		}else if(cacheController.parentCache != null){
-			if(DEBUG_LEVEL >= 3)System.out.println("...Getting From Parent Cache");
-			block = cacheController.parentCache.getBlock(address);
-			if(DEBUG_LEVEL >= 4)System.out.println("Cache.resolveMiss(" + address + ")\n...Got " + block + ")");
+			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss()...Getting From Parent Cache");
+			block = cacheController.parentCache.getBlock(bAddress, blockSize);
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
 		
 		if(memory[mAddress] == null){
-			if(DEBUG_LEVEL >= 4)System.out.println("...Setting memory[" + mAddress + "] to " + block);
 			memory[mAddress] = block;
 		}else{
-			throw new IllegalStateException("...memory[" + mAddress + "] is not NULL");
+			throw new IllegalStateException("L"+ cacheLevel + "-Cache.resolveMiss()...memory[" + mAddress + "] is not NULL");
 		}
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss()...Finished");
 	}
 	
-	private void writeBack(Integer mAddress) throws IllegalAccessException, NullPointerException{
-		if(DEBUG_LEVEL >= 1)System.out.println("Cache.writeBack(" + mAddress + ")");
+	protected final void writeBack(Integer mAddress) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.writeBack(" + mAddress + ")");
 		
 		if(cacheController.parentMemory != null){
-			cacheController.parentMemory.putBlock(memory[mAddress].clone());
+			cacheController.parentMemory.putBlock(memory[mAddress]);
 		}else if(cacheController.parentCache != null){
-			cacheController.parentCache.putBlock(memory[mAddress].clone());
+			cacheController.parentCache.putBlock(memory[mAddress]);
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
@@ -368,5 +498,55 @@ public class Cache {
 		cacheController.cacheStats.REPLACEMENT++;
 		
 		memory[mAddress] = null;
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.writeBack()...Finished");
+	}
+	
+	protected final Integer findBlockInMemory(Integer bAddress){
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.findBlockInMemory(" + bAddress + ")");
+		
+		for(Integer index : getPossibleMemoryAddressArray(bAddress)){
+			if(memory[index] != null){
+				if(memory[index].getBlockAddress().equals(bAddress)){
+					
+					if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.findBlockInMemory()...Hit at " + index);
+					
+					if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.findBlockInMemory()...Finished");
+					
+					return index;
+				}
+			}
+		}
+
+		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.findBlockInMemory()...Miss");
+		
+		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.findBlockInMemory()...Finished");
+		
+		// Element is Not In Memory
+		return null;
+	}
+	
+	/**
+	 * Finds the Set in Memory that Contains address
+	 * 
+	 * @param address Address (Block or Element)
+	 * @return Integer of the Set
+	 */
+	protected final Integer getSet(Integer address){
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-Cache.getSet(" + address + ")");
+		// Validation
+		if(address == null)throw new NullPointerException("bAddress Can Not Be NULL");
+		if(address < 0)throw new IllegalArgumentException("bAddress Must Be Positive");
+		
+		if(associativity == 0){
+			if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-Cache.getSet(" + address + ")...Finished");
+			return null;
+		}else if(associativity == 1){
+			if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-Cache.getSet(" + address + ")...Finished");
+			return 0;
+		}else{
+			if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-Cache.getSet(" + address + ")...Finished");
+			return (address & ((associativity - 1) << offsetShift)) >> offsetShift;
+		}
 	}
 }
