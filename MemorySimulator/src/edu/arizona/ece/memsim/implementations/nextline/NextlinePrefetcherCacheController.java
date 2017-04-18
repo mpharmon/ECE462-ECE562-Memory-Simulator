@@ -90,8 +90,10 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		
 		cache.put(eAddress, bite);
 		
+		// Next Line Pre-Fetch
+		cache.get(eAddress + 1);
+		
 		cacheStats.ACCESS++;
-		//cacheStats.WRITE++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
