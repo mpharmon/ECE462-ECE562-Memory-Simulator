@@ -10,10 +10,14 @@ import java.util.Iterator;
  */
 class MemoryElementIterator implements Iterator<MemoryElement>{
 
+	/**
+	 * {@link MemoryBlock} Being Iterated Over
+	 */
 	private MemoryBlock memoryBlock;
 	
-	private Integer blockSize;
-	
+	/**
+	 * Current Element Being Accessed
+	 */
 	private Integer currentElement;
 	
 	/**
@@ -23,12 +27,11 @@ class MemoryElementIterator implements Iterator<MemoryElement>{
 	protected MemoryElementIterator(MemoryBlock memoryBlock){
 		this.memoryBlock = memoryBlock;
 		currentElement = new Integer(0);
-		blockSize = new Integer(memoryBlock.getSize());
 	}
 
 	@Override
 	public boolean hasNext() {
-		if(currentElement < blockSize)return true;
+		if(currentElement < memoryBlock.getSize())return true;
 		return false;
 	}
 

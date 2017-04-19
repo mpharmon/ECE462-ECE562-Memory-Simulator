@@ -39,7 +39,6 @@ public class LoadQueue extends ArrayBlockingQueue<Integer> {
 		// Validation
 		if(spot == null)throw new NullPointerException("spot Can Not Be NULL");
 		if(spot < 0)throw new IllegalArgumentException("spot Must Be Positive");
-		//if(spot > this.size())throw new IllegalArgumentException("spot (" + spot + ") Must be Less Than Capacity (" + this.size() + ")");
 		
 		if(this.peek().equals(spot)){
 			// If the spot to be moved is at the top of the queue, roll it to the bottom of the list and stop (this is an efficiency enhancement)

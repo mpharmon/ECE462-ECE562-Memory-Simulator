@@ -119,6 +119,8 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	}
 	
 	/**
+	 * All Inheritance of this Class MUST Call this Constructor in the Custom Constructor
+	 * 
 	 * @param level Cache Level (1-n)
 	 * @param tSize Total Size of the Cache
 	 * @param bSize Block Size of the Cache
@@ -126,7 +128,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * @param aTime Access Time of the Cache
 	 * @throws InterruptedException 
 	 */
-	private CacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime) throws InterruptedException{
+	protected CacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime) throws InterruptedException{
 		if(DEBUG_LEVEL >= 1)System.out.println("\nCacheController(" + level + ", " + tSize + ", " + bSize + ", " + assoc + ", " + aTime + ")");
 		
 		if(tSize == null)throw new NullPointerException("tSize Can Not Be Null");
@@ -150,7 +152,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		
 		if(tSize % bSize != 0)throw new ArrayIndexOutOfBoundsException("Block Size Not Aligned with Total Size");
 		
-		// Prepare Child Cache Array
+		// Initialize Child Cache Array
 		childCaches = new ArrayList<>();
 		
 		cacheStats = new CacheStatistics();
@@ -183,7 +185,6 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + " CacheController.get()...Finished");
 		
 		cacheStats.ACCESS++;
-		//cacheStats.READ++;
 		
 		return returnValue;
 	}
@@ -237,6 +238,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
 		
 		cache.put(eAddress, bite);
+		
 		cacheStats.ACCESS++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
@@ -260,7 +262,6 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		cache.putBlock(block);
 		
 		cacheStats.ACCESS++;
-		//cacheStats.BLOCKWRITE++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("CacheController.putBlock()...Finished");
 	}

@@ -72,7 +72,6 @@ public class MemoryBlock implements Cloneable {
 	 */
 	public Integer getBlockAddress(){
 		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getBlockAddress()");	
-		if(DEBUG_LEVEL >= 5)System.out.println("...Returning " + blockAddress);	
 		return blockAddress;
 	}
 	
@@ -84,7 +83,10 @@ public class MemoryBlock implements Cloneable {
 	 */
 	public MemoryElement getElement(Integer offset){
 		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getElement(" + offset + ")");	
+		
+		// Validation
 		if(offset == null)throw new NullPointerException("address Can Not Be Null");
+		
 		if(offset < blockSize){
 			if(DEBUG_LEVEL >= 5)System.out.println("...Returning " + memory[offset]);
 			return memory[offset];
@@ -134,7 +136,7 @@ public class MemoryBlock implements Cloneable {
 	}
 	
 	/**
-	 * Sets the Memory State to Shared
+	 * Sets the Memory State to "Shared"
 	 */
 	public void makeShared(){
 		state = MemoryState.SHARED;
@@ -143,30 +145,10 @@ public class MemoryBlock implements Cloneable {
 	/**
 	 * Get'er for the State of the Memory
 	 * 
-	 * @return MemoryState
+	 * @return {@link MemoryState}
 	 */
 	public MemoryState getMemoryState(){
 		return state;
-	}
-	
-	public MemoryBlock clone(){
-		if(DEBUG_LEVEL >= 1)System.out.println("Memory.clone()");
-		
-		MemoryBlock newBlock = new MemoryBlock(blockSize, blockAddress);
-		
-		MemoryElement[] newMemory = new MemoryElement[blockSize];
-		
-		int i=0;
-		for(MemoryElement element : memory){
-			if(element != null)newMemory[i] = element.clone();
-			i++;
-		}
-		
-		newBlock.memory = newMemory;
-		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + newBlock);
-		
-		return newBlock;
 	}
 
 	/**
