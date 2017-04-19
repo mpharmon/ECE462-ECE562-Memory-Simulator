@@ -77,11 +77,10 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		totalSize = tSize;
 		accessTime = aTime;
 		
-		//Integer numBlocks = tSize / bSize;
-		if(DEBUG_LEVEL >= 3)System.out.println("Memory()...Creating memory[" + totalSize + "]");
 		memory = new MemoryElement[totalSize];
 		
 		childCaches = new ArrayList<CacheController>();
+		
 		cacheStats = new CacheStatistics();
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("Memory()...Finished");
@@ -105,10 +104,12 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		
 		cacheStats.ACCESS++;
 		
+		// MemoryBlock to Return
 		MemoryBlock newMB = new MemoryBlock(size, bAddress);
 		
 		if(DEBUG_LEVEL >= 4)System.out.println("Memory.getBlock()...Starting at " + bAddress + " Going to " + (bAddress + size - 1));
 		
+		// Load Memory Block to Return
 		for(int i = bAddress; i < bAddress + size; i++){
 			if(memory[i] == null){
 				if(DEBUG_LEVEL >= 5)System.out.println("Memory.getBlock()...memory[" + i + "] MISS, Creating MemoryBlock");
@@ -116,7 +117,9 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 			}else{
 				if(DEBUG_LEVEL >= 5)System.out.println("Memory.getBlock()...memory[" + i + "] HIT");
 			}
+			
 			Integer offset = i % size;
+			
 			newMB.setElement(offset, memory[i].clone());
 		}
 		
@@ -143,7 +146,6 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		
 		// Write MemoryElements to Memory
 		MemoryElementIterator meIterator = block.getIterator();
-		
 		while(meIterator.hasNext()){
 			MemoryElement element = meIterator.next();
 			
