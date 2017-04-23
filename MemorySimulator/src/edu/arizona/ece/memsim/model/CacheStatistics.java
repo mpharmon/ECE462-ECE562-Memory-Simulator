@@ -67,12 +67,6 @@ public class CacheStatistics {
 	 * Counts Cache Invalidates
 	 */
 	public Integer INVALIDATE;
-	/*
-	 * Keeps Track of The Hit-Miss Ratio for number of cache Acceses 
-	 * 
-	 * */
-	
-	public Double HitRatio;
 	
 	public CacheStatistics(){
 		ACCESS = new Integer(0);
@@ -87,7 +81,24 @@ public class CacheStatistics {
 		REPLACEMENT = new Integer(0);
 		WRITEBACK = new Integer(0);
 		INVALIDATE = new Integer(0);
-		HitRatio = new Double(0);
+	}
+	
+	public void print(String prefix){
+		System.out.println(prefix + ".ACCESSES\t\t" + ACCESS);
+		System.out.println(prefix + ".READ_TOTAL\t\t" + (READ_HIT + READ_MISS));
+		System.out.println(prefix + ".READ_HITS\t\t" + READ_HIT);
+		System.out.println(prefix + ".READ_MISS\t\t" + READ_MISS);
+		System.out.println(prefix + ".BLOCKREAD_TOTAL\t" + (BLOCKREAD_HIT + BLOCKREAD_MISS));
+		System.out.println(prefix + ".BLOCKREAD_HITS\t" + BLOCKREAD_HIT);
+		System.out.println(prefix + ".BLOCKREAD_MISSES\t" + BLOCKREAD_MISS);
+		System.out.println(prefix + ".WRITE_TOTAL\t\t" + (WRITE_HIT + WRITE_MISS));
+		System.out.println(prefix + ".WRITE_HIT\t\t" + WRITE_HIT);
+		System.out.println(prefix + ".WRITE_MISS\t\t" + WRITE_MISS);
+		System.out.println(prefix + ".BLOCKWRITE_TOTAL\t" + (BLOCKWRITE_HIT + BLOCKWRITE_MISS));
+		System.out.println(prefix + ".BLOCKWRITE_HITS\t" + BLOCKWRITE_HIT);
+		System.out.println(prefix + ".BLOCKWRITE_MISSES\t" + BLOCKWRITE_MISS);
+		System.out.println(prefix + ".REPLACEMENTS\t\t" + REPLACEMENT);
+		System.out.println(prefix + ".INVALIDATES\t\t" + INVALIDATE);
 	}
 	
 }
