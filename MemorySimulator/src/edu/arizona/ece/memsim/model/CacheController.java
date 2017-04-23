@@ -161,13 +161,28 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	}
 	
 	/**
-	 * Returns a MemoryResult that Wraps a Memory Element 
+	 * Returns a {@link MemoryResult} that Wraps a {@link MemoryElement}
+	 * 
+	 * For Backwards Compatibility; Use get(Boolean trackStats, Integer eAddress)
+	 * 
+	 * @deprecated
+	 * 
+	 * @param eAddress Address of the Element Requested
+	 * @return {@link MemoryResult} Containing the {@link MemoryElement} Refrenced By eAddress
+	 * @throws Exception
+	 */
+	public MemoryResult get(Integer eAddress) throws Exception{
+		return get(true, eAddress);
+	}
+	
+	/**
+	 * Returns a {@link MemoryResult} that Wraps a {@link MemoryElement}
 	 * 
 	 * @param eAddress Address of the Memory Locator Desired
 	 * @return MemoryResult 
 	 * @throws Exception 
 	 */
-	public MemoryResult get(Integer eAddress) throws Exception{
+	public MemoryResult get(Boolean trackStats, Integer eAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.get(" + eAddress + ")");
 		
 		// Prevent Element Access if ChildCache(s) is/are Present
@@ -180,23 +195,40 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		// Create 
 		MemoryResult returnValue = new MemoryResult();
 		
-		returnValue.addMemoryElement(cache.get(eAddress));
+		returnValue.addMemoryElement(cache.get(trackStats, eAddress));
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + " CacheController.get()...Finished");
 		
-		cacheStats.ACCESS++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		return returnValue;
 	}
-
+	
 	/**
-	 * Gets a MemoryBlock from Cache, and loads it from a Parent Cache or Parent Memory If Necessary
+	 * Gets a MemoryBlock from Cache
+	 * 
+	 * For Backwards Compatibility; Use getBlock(Boolean trackStats, Integer bAddress, Integer size)
+	 * 
+	 * @deprecated
 	 * 
 	 * @param bAddress Address of the MemoryBlock desired
+	 * @param size Number of Elements to Get
+	 * @return {@link MemoryBlock} Starting at bAddress Containing size Number of Elements
+	 * @throws Exception
+	 */
+	public MemoryBlock getBlock(Integer bAddress, Integer size) throws Exception{
+		return getBlock(true, bAddress, size);
+	}
+	
+	/**
+	 * Gets a MemoryBlock from Cache
+	 * 
+	 * @param bAddress Address of the MemoryBlock desired
+	 * @param size Number of Elements to Get
 	 * @return MemoryBlock
 	 * @throws Exception 
 	 */
-	public MemoryBlock getBlock(Integer bAddress, Integer size) throws Exception {
+	public MemoryBlock getBlock(Boolean trackStats, Integer bAddress, Integer size) throws Exception {
 		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-CacheController.getBlock(" + bAddress + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
@@ -209,7 +241,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(size == null)throw new NullPointerException("size Can Not Be Null");
 		if(size <= 0)throw new IllegalArgumentException("size Must Be Greater Than Zero");
 		
-		MemoryBlock returnValue = cache.getBlock(bAddress, size);
+		MemoryBlock returnValue = cache.getBlock(trackStats, bAddress, size);
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.getBlock()...Finished");
 		
@@ -219,14 +251,28 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	}
 	
 	/**
+	 * Puts a Value into a Memory Element in this Level of Cache
+	 * 
+	 * For Backwards Compatibilty, Uuse put(Boolean trackStats, Integer eAddress, Byte bite)
+	 * 
+	 * @deprecated
+	 * 
+	 * @param eAddress
+	 * @param bite
+	 * @throws Exception
+	 */
+	public void put(Integer eAddress, Byte bite) throws Exception{
+		put(true, eAddress, bite);
+	}
+	
+	/**
 	 * Puts a Value into Memory Element in This Level of Cache
 	 * 
 	 * @param eAddress Address of the data being written
 	 * @param bite Byte of the data being written
 	 * @throws Exception 
 	 */
-
-	public void put(Integer eAddress, Byte bite) throws Exception {
+	public void put(Boolean trackStats, Integer eAddress, Byte bite) throws Exception {
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.put(" + eAddress + ", " + bite +")");
 		
 		//Prevent Element Access if ChildCache(s) is/are Present
@@ -237,7 +283,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		if(eAddress < 0)throw new IllegalArgumentException("address Must Be Zero or Greater");
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
 		
-		cache.put(eAddress, bite);
+		cache.put(trackStats, eAddress, bite);
 		
 		cacheStats.ACCESS++;
 		
@@ -245,12 +291,27 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	}
 	
 	/**
+	 * Puts a MemoryBlock Into This Level of Cache.
+	 * 
+	 * For Backwards Compatibility; USE putBlock(Boolean trackStats, MemoryBlock block)
+	 * 
+	 * @deprecated
+	 * 
+	 * @param block MemoryBlock to be written
+	 * @throws Exception
+	 */
+	public void putBlock(MemoryBlock block) throws Exception{
+		putBlock(true, block);
+	}
+	
+	/**
 	 * Puts a MemoryBlock Into This Level of Cache
 	 * 
+	 * @param trackStats Controls if Statistics are Tracked for this Request
 	 * @param block MemoryBlock to be written
 	 * @throws Exception 
 	 */
-	public void putBlock(MemoryBlock block) throws Exception{
+	public void putBlock(Boolean trackStats, MemoryBlock block) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.putBlock(" + block.getBlockAddress() + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
@@ -259,7 +320,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		// Validity Checking
 		if(block == null)throw new NullPointerException("block Can Not Be NULL");
 		
-		cache.putBlock(block);
+		cache.putBlock(trackStats,block);
 		
 		cacheStats.ACCESS++;
 		

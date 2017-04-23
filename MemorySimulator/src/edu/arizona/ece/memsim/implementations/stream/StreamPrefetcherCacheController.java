@@ -30,11 +30,14 @@ public class StreamPrefetcherCacheController extends CacheController {
 		// Create 
 		MemoryResult returnValue = new MemoryResult();
 		
-		returnValue.addMemoryElement(cache.get(eAddress));
-		cache.get(eAddress + 1);
-		cache.get(eAddress + 2);
-		cache.get(eAddress + 3);
-		cache.get(eAddress + 64);
+		returnValue.addMemoryElement(cache.get(true, eAddress));
+		
+		// Stream Pre-fetch
+		// TODO: How is this working?
+		cache.get(false, (eAddress + 1));
+		cache.get(false, (eAddress + 2));
+		cache.get(false, (eAddress + 3));
+		cache.get(false, (eAddress + 64));
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
@@ -60,8 +63,8 @@ public class StreamPrefetcherCacheController extends CacheController {
 		if(bAddress == null)throw new NullPointerException("address Can Not Be Null");
 		if(bAddress < 0)throw new IllegalArgumentException("address Must Be Greater Than Zero");
 		
-		MemoryBlock returnValue = cache.getBlock(bAddress, blockSize);
-		
+		MemoryBlock returnValue = cache.getBlock(true, bAddress, blockSize);
+		// TODO: Do we need to do a block-stride pre-fetch?
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
@@ -89,7 +92,8 @@ public class StreamPrefetcherCacheController extends CacheController {
 		
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
 		
-		cache.put(eAddress, bite);
+		cache.put(true, eAddress, bite);
+		// TODO: Do we need to do a stride pre-fetch here?
 		
 		cacheStats.ACCESS++;
 		//cacheStats.WRITE++;
@@ -112,10 +116,10 @@ public class StreamPrefetcherCacheController extends CacheController {
 		// Validity Checking
 		if(block == null)throw new NullPointerException("block Can Not Be NULL");
 		
-		cache.putBlock(block);
+		cache.putBlock(true, block);
+		// TODO: Do we need to do a block-stride pre-fetch here?
 		
 		cacheStats.ACCESS++;
-		//cacheStats.BLOCKWRITE++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}

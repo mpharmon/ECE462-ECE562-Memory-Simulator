@@ -35,12 +35,12 @@ public class Program{
 		System.out.println("Running Basic Sequential Memory Access");
 		Random rand = new Random();
 		for(int i = 0; i < 16777216; i++){
-			L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
-			L1.get(i);
+			L1.put(true, i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+			L1.get(true, i);
 		}
 		for(int i = 0; i < 131072; i++){
-			L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
-			L1.get(i);
+			L1.put(true, i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+			L1.get(true, i);
 		}
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
@@ -55,9 +55,9 @@ public class Program{
 			Integer pos = rand.nextInt(16777217);
 
 			if(rw == 0){// Read
-				L1.get(pos);
+				L1.get(true, pos);
 			}else if(rw == 1){
-				L1.put(pos, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+				L1.put(true, pos, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 			}else{
 				throw new Exception("Random Gave Value other than 0 or 1");
 			}
@@ -77,9 +77,9 @@ public class Program{
 		for(int i = 0; i < 16777216; i++){
 			Integer rw = rand.nextInt(2);
 			if(rw == 0){// Read
-				L1.get(i);
+				L1.get(true, i);
 			}else if(rw == 1){
-				L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+				L1.put(true, i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 			}else{
 				throw new Exception("Random Gave Value other than 0 or 1");
 			}
@@ -95,7 +95,7 @@ public class Program{
 		mem = new Memory(134217728, 200);// 128MB, 200 Cycle Access
 		L2 = null;
 		L2 = new CacheController(2, 131072, 64, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access
-		L1 = null; // one is fully asociative in cache.java
+		L1 = null; // one is fully associative in cache.java
 		L1 = new CacheController(1, 8192, 64, 1, 1, mem);// 8KB, 64B Block, Fully associative , 1 Cycle Access
 	}
 	

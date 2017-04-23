@@ -92,7 +92,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param address Address of the MemoryBlock Requested
 	 * @return MemoryBlock
 	 */
-	public MemoryBlock getBlock(Integer bAddress, Integer size){
+	public MemoryBlock getBlock(Boolean trackStats, Integer bAddress, Integer size){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.getBlock(" + bAddress + ", " + size + ")");
 		
 		// Validation
@@ -102,7 +102,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 		if(size == null)throw new NullPointerException("size Can Not Be Null");
 		if(size < 1)throw new ArrayIndexOutOfBoundsException("size Must Be Greater Than Zero");
 		
-		cacheStats.ACCESS++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		// MemoryBlock to Return
 		MemoryBlock newMB = new MemoryBlock(size, bAddress);
@@ -123,7 +123,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 			newMB.setElement(offset, memory[i].clone());
 		}
 		
-		cacheStats.BLOCKREAD_HIT++;
+		if(trackStats)cacheStats.BLOCKREAD_HIT++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("Memory.getBlock()...Finished");
 		
@@ -137,7 +137,7 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	 * @param block The MemoryBlock being written
 	 * @return boolean If the memory block was written true, otherwise false
 	 */
-	public void putBlock(MemoryBlock block){
+	public void putBlock(Boolean trackStats, MemoryBlock block){
 		if(DEBUG_LEVEL >= 1)System.out.println("Memory.putBlock(" + block.getBlockAddress() + ")");
 		
 		// Validate
@@ -154,8 +154,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 			memory[element.getElementAddress()].setData(element.getData());
 		}
 		
-		cacheStats.ACCESS++;
-		cacheStats.BLOCKWRITE_HIT++;
+		if(trackStats)cacheStats.ACCESS++;
+		if(trackStats)cacheStats.BLOCKWRITE_HIT++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("Memory.putBlock()...Finished");
 	}
