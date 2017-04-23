@@ -220,4 +220,8 @@ public class Memory implements CacheCallBack, WriteInvalidateListener {
 	public CacheStatistics getMemoryStats(){
 		return cacheStats;
 	}
+	
+	public Integer getSize(){
+		return totalSize;
+	}
 }
