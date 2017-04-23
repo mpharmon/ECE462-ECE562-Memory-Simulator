@@ -62,13 +62,41 @@ public class Program{
 				throw new Exception("Random Gave Value other than 0 or 1");
 			}
 		}
+		
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
 		printStats("M1", mem.getMemoryStats());
 	}
 	
-	public void StrideAccess(){
-		// TODO: Implement
+	public void StrideAccess(Boolean randStride, Integer strideSize) throws Exception{
+		Random rand = new Random();
+		
+		for(int i = 0 ; i < 8192 - strideSize; i++){
+			Integer startLocation = rand.nextInt(8192 - strideSize - 1);
+			
+			Integer sS = new Integer(0);
+			
+			if(randStride){
+				sS = rand.nextInt(strideSize);
+			}else{
+				sS = strideSize;
+			}
+		
+			for(int j = 0; j < sS; j++){
+				Integer rw = rand.nextInt(2);
+			
+				if(rw == 0){// Read
+					L1.get(true, (startLocation + i));
+				}else if(rw == 1){// Write
+					L1.put(true, (startLocation + i), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+				}else{
+					throw new Exception("Random Gave Value other than 0 or 1");
+				}
+			}
+		}
+		printStats("L1", L1.getCacheStats());
+		printStats("L2", L2.getCacheStats());
+		printStats("M1", mem.getMemoryStats());
 	}
 	
 	public static void SequentialAccess() throws Exception{
@@ -90,12 +118,12 @@ public class Program{
 	}
 
 	protected static void Reset() throws Exception{
-		// Currently Block Sizes Must Be EQUAL Among all Cache Level(s) and Memory
+		// Block Sizes No Longer Need to Be Equal Across All Levels of Cache and memory
 		mem = null;
 		mem = new Memory(134217728, 200);// 128MB, 200 Cycle Access
 		L2 = null;
 		L2 = new CacheController(2, 131072, 64, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access
-		L1 = null; // one is fully associative in cache.java
+		L1 = null;
 		L1 = new CacheController(1, 8192, 64, 1, 1, mem);// 8KB, 64B Block, Fully associative , 1 Cycle Access
 	}
 	
