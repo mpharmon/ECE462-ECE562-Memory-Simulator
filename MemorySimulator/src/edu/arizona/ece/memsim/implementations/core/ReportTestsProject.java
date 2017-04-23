@@ -20,9 +20,10 @@ public class ReportTestsProject{
 	
 	public static void Run() throws InterruptedException{
 		try {
-			SequentialAccess(100);
-			RandomAccess(100);
-			StrideAccess(100, true, 32);
+			SequentialAccess(1000);
+			RandomAccess(1000);
+			StrideAccess(1000, 32);
+			LinearAccess(1000, true, 32);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -70,13 +71,14 @@ public class ReportTestsProject{
 	}
 	
 	/**
-	 * Performs Stride Access
+	 * Performs Linear Access (Similar to Stride but with random selected blocks [and possibly randomly selected stride size)
 	 * 
+	 * @param times Number of Times the Test is Run
 	 * @param randStride TRUE Indicates Random Stride Size, FALSE Indicates Fixed Stride Size
 	 * @param strideSize If randStride is TRUE, this is the Largest Stride Possible; if randStride is FALSE this is the Stride Size
 	 * @throws Exception
 	 */
-	public static void StrideAccess(Integer times, Boolean randStride, Integer strideSize) throws Exception{
+	public static void LinearAccess(Integer times, Boolean randStride, Integer strideSize) throws Exception{
 		Random rand = new Random();
 		
 		ArrayList<CacheStatistics> L1StatsArray = new ArrayList<CacheStatistics>();
@@ -84,7 +86,7 @@ public class ReportTestsProject{
 		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
 		
 		System.out.println("\n+----------------------------------+");
-		System.out.println("| Running Stride Memory Access " + times + " |");
+		System.out.println("| Running Linear Memory Access " + times + " |");
 		System.out.println("+----------------------------------+\n");
 		
 		// Run Simulation 'k' Times
@@ -109,6 +111,60 @@ public class ReportTestsProject{
 						L1.get(true, (startLocation + i));
 					}else if(rw == 1){// Write
 						L1.put(true, (startLocation + i), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+					}else{
+						throw new Exception("Random Gave Value other than 0 or 1");
+					}
+				}
+			}
+			
+			L1StatsArray.add(L1.getCacheStats());
+			L2StatsArray.add(L2.getCacheStats());
+			M1StatsArray.add(mem.getMemoryStats());
+		}
+		
+		CacheStatisticsAnalysis L1Stats = CacheStatisticsAnalysis.AnalyzeArrayList(L1StatsArray);
+		CacheStatisticsAnalysis L2Stats = CacheStatisticsAnalysis.AnalyzeArrayList(L2StatsArray);
+		CacheStatisticsAnalysis M1Stats = CacheStatisticsAnalysis.AnalyzeArrayList(M1StatsArray);
+		
+		L1Stats.print("L1");
+		L2Stats.print("L2");
+		M1Stats.print("M1");
+	}
+	
+	
+	/**
+	 * Performs Stride Access
+	 * 
+	 * @param times
+	 * @param randStride
+	 * @param strideSize
+	 * @throws Exception
+	 */
+	public static void StrideAccess(Integer times, Integer strideSize, Integer numStride) throws Exception{
+		
+		
+		Random rand = new Random();
+		
+		ArrayList<CacheStatistics> L1StatsArray = new ArrayList<CacheStatistics>();
+		ArrayList<CacheStatistics> L2StatsArray = new ArrayList<CacheStatistics>();
+		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
+		
+		System.out.println("\n+----------------------------------+");
+		System.out.println("| Running Stride Memory Access " + times + " |");
+		System.out.println("+----------------------------------+\n");
+		
+		// Run Simulation 'k' Times
+		for(int k = 0; k < times; k++){
+			Reset(false);
+			
+			for(int i = 0; i < numStride; i++){
+				for(int j = 0; j < numStrideElements; j++){
+					Integer rw = rand.nextInt(2);
+					
+					if(rw == 0){// Read
+						L1.get(true, (i * j + j));
+					}else if(rw == 1){// Write
+						L1.put(true, (i * j + j), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 					}else{
 						throw new Exception("Random Gave Value other than 0 or 1");
 					}
