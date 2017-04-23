@@ -20,10 +20,14 @@ public class Program{
 	
 	public static void Run() throws InterruptedException{
 		try {
+			Reset();	
+			BasicSequentialAccess();
 			Reset();
 			SequentialAccess();
-			SequentialAccess();
 			Reset();
+			RandomAccess();
+			Reset();
+			StrideAccess(true, 32);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -35,10 +39,6 @@ public class Program{
 		System.out.println("Running Basic Sequential Memory Access");
 		Random rand = new Random();
 		for(int i = 0; i < 16777216; i++){
-			L1.put(true, i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
-			L1.get(true, i);
-		}
-		for(int i = 0; i < 131072; i++){
 			L1.put(true, i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 			L1.get(true, i);
 		}
@@ -68,7 +68,8 @@ public class Program{
 		printStats("M1", mem.getMemoryStats());
 	}
 	
-	public void StrideAccess(Boolean randStride, Integer strideSize) throws Exception{
+	public static void StrideAccess(Boolean randStride, Integer strideSize) throws Exception{
+		System.out.println("Running Stride Memory Access");
 		Random rand = new Random();
 		
 		for(int i = 0 ; i < 8192 - strideSize; i++){

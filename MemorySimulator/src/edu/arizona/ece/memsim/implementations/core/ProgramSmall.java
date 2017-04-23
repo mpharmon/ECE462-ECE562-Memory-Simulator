@@ -23,7 +23,7 @@ public class ProgramSmall{
 			Reset();
 			RandomAccess();
 			Reset();
-			StrideAccess(true, 32);
+			StrideAccess(false, 32);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

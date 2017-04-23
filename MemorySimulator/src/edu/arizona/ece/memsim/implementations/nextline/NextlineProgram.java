@@ -1,19 +1,21 @@
 package edu.arizona.ece.memsim.implementations.nextline;
 
-import edu.arizona.ece.memsim.implementations.core.Program;
+import edu.arizona.ece.memsim.implementations.core.ProgramSmall;
+import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.Memory;
 
-public class NextlineProgram extends Program {
-
-	public static void main(String[] args) throws InterruptedException{
-		Run();
-	}
+public class NextlineProgram extends ProgramSmall {
 	
 	protected static void Reset() throws Exception{
-		// Currently Block Sizes Must Be EQUAL Among all Cache Level(s) and Memory
+		System.out.println("\n+---------------+");
+		System.out.println("| Running Reset (Override) |");
+		System.out.println("+---------------+\n");
+		
 		mem = null;
-		mem = new Memory(134217728, 200);// 128MB, 64B Block, 200 Cycle Access
+		mem = new Memory(16384, 200);// 16KB, 200 Cycle Access
+		L2 = null;
+		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
 		L1 = null;
-		L1 = new NextlinePrefetcherCacheController(1, 8192, 64, 0, 1, mem);// 8KB, 64B Block, Fully Associative, 1 Cycle Access
+		L1 = new NextlinePrefetcherCacheController(1, 1024, 64, 0, 1, L2);// 1KB, 32B Block, Fully Associative, 1 Cycle Access
 	}
 }
