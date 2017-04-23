@@ -21,17 +21,15 @@ public class ProgramPatternController extends CacheController {
 		super(level, tSize, bSize, assoc, aTime, pCache);
 		State = null;
 		TotalMemSize = MemSize;
-		//HitsRatio = 0;
-		// TODO Auto-generated constructor stub
 	}
 	
 	public ProgramPatternController(Integer level,Integer MemSize, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			Memory pMemory) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
-		// TODO Auto-generated constructor stub
+
 		State = null;
 		TotalMemSize = MemSize;
-		//HitsRatio = 0;
+
 	}
 		
 	 // calls the object memory result

@@ -148,7 +148,7 @@ public class Cache {
 	 * @throws Exception 
 	 * @throws IndexOutOfBoundsException When eAddress is Less Than Zero
 	 */
-	public MemoryElement get(Integer eAddress) throws Exception{
+	public MemoryElement get(Boolean trackStats, Integer eAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.get(" + eAddress + ")");
 		
 		// Validation
@@ -169,7 +169,7 @@ public class Cache {
 				
 				if(associativity > 0)loadQueue[getSet(bAddress)].roll(mAddress);
 				
-				cacheController.cacheStats.READ_HIT++;
+				if(trackStats)cacheController.cacheStats.READ_HIT++;
 				
 				if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.get()...Finished");
 				
@@ -179,16 +179,16 @@ public class Cache {
 		
 		// If We Get Here We have a Read Miss
 		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.get()...Cache Miss");
-		cacheController.cacheStats.READ_MISS++;
+		if(trackStats)cacheController.cacheStats.READ_MISS++;
 		
 		// Get Next Write Location For Missed Block
 		Integer wAddress = getNextWriteLocationLRU(bAddress);
 		
 		//Write Back If Necessary
-		if(memory[wAddress] != null)writeBack(wAddress);
+		if(memory[wAddress] != null)writeBack(trackStats, wAddress);
 		
 		//Resolve Miss
-		resolveMiss(wAddress, bAddress);
+		resolveMiss(trackStats, wAddress, bAddress);
 		
 		//Return Value
 		MemoryElement mElement = memory[wAddress].getElement(offset).clone();
@@ -206,7 +206,7 @@ public class Cache {
 	 * @return 
 	 * @throws Exception
 	 */
-	public MemoryBlock getBlock(Integer bAddress, Integer size) throws Exception{
+	public MemoryBlock getBlock(Boolean trackStats, Integer bAddress, Integer size) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.getBlock(" + bAddress + ", " + size + ")");
 		
 		// Validation
@@ -233,12 +233,12 @@ public class Cache {
 			//TODO: Correct Exception Thrown
 			if(localEndMemoryAddress - localStartMemoryAddress > 1 || localEndMemoryAddress - localStartMemoryAddress < 0)throw new Exception("start and end are not in adjcent MemoryBlocks");
 			
-			cacheController.cacheStats.BLOCKREAD_HIT++;
+			if(trackStats)cacheController.cacheStats.BLOCKREAD_HIT++;
 		}else{// Did Not Find Start and/or End Blocks
 			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Start and/or End Block Miss");
 			
 			// Count as a MISS if one or both Blocks are not in memory
-			cacheController.cacheStats.BLOCKREAD_MISS++;
+			if(trackStats)cacheController.cacheStats.BLOCKREAD_MISS++;
 			
 			if(localStartMemoryAddress == null){// Resolve Start Block Miss
 				if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Resolving Start Block Miss");
@@ -247,10 +247,10 @@ public class Cache {
 				Integer mAddress = getNextWriteLocationLRU(localStartBlockAddress);
 				
 				// Write Back
-				if(memory[mAddress] != null)writeBack(mAddress);
+				if(memory[mAddress] != null)writeBack(trackStats, mAddress);
 				
 				// Resolve Miss
-				resolveMiss(mAddress, localStartBlockAddress);
+				resolveMiss(trackStats, mAddress, localStartBlockAddress);
 				
 				// Get Next Write Location For Missed Block and Verify it is in Memory
 				localStartMemoryAddress = findBlockInMemory(localStartBlockAddress);
@@ -265,10 +265,10 @@ public class Cache {
 				Integer mAddress = getNextWriteLocationLRU(localEndBlockAddress);
 				
 				// Write Back
-				if(memory[mAddress] != null)writeBack(mAddress);
+				if(memory[mAddress] != null)writeBack(trackStats, mAddress);
 				
 				// Resolve Miss
-				resolveMiss(mAddress, localEndBlockAddress);
+				resolveMiss(trackStats, mAddress, localEndBlockAddress);
 			}
 			
 			// Get Next Write Location For Missed Block and Verify it is in Memory
@@ -308,7 +308,7 @@ public class Cache {
 	 * @param bite Byte to be Written
 	 * @throws Exception 
 	 */
-	public void put(Integer eAddress, Byte bite) throws Exception{
+	public void put(Boolean trackStats, Integer eAddress, Byte bite) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.put(" + eAddress + ", " + bite + ")");
 	
 		// Validation
@@ -328,7 +328,7 @@ public class Cache {
 				
 				if(associativity > 0)loadQueue[getSet(bAddress)].roll(mAddress);
 				
-				cacheController.cacheStats.WRITE_HIT++;
+				if(trackStats)cacheController.cacheStats.WRITE_HIT++;
 				
 				memory[mAddress].getElement(offset).setData(bite);
 				
@@ -340,16 +340,16 @@ public class Cache {
 		
 		// If We Get Here We have a Miss
 		if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.put()...Cache Miss");
-		cacheController.cacheStats.WRITE_MISS++;
+		if(trackStats)cacheController.cacheStats.WRITE_MISS++;
 		
 		// Get Next Write Location For Missed Block
 		Integer wAddress = getNextWriteLocationLRU(bAddress);
 		
 		// Write Back If Necessary
-		if(memory[wAddress] != null)writeBack(wAddress);
+		if(memory[wAddress] != null)writeBack(trackStats, wAddress);
 		
 		// Resolve Miss
-		resolveMiss(wAddress, bAddress);
+		resolveMiss(trackStats, wAddress, bAddress);
 		
 		// Update Value
 		memory[wAddress].getElement(offset).setData(bite);
@@ -363,7 +363,7 @@ public class Cache {
 	 * @param block {@link MemoryBlock} to be Written to this Level of Cache
 	 * @throws Exception
 	 */
-	public void putBlock(MemoryBlock block) throws Exception{
+	public void putBlock(Boolean trackStats, MemoryBlock block) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.putBlock([blockAddress]" + block.getBlockAddress() + ")");
 		
 		// Validation
@@ -385,12 +385,12 @@ public class Cache {
 			//TODO: Correct Exception Thrown
 			if(localEndMemoryAddress - localStartMemoryAddress > 1 || localEndMemoryAddress - localStartMemoryAddress < 0)throw new Exception("start and end are not in adjcent MemoryBlocks");
 			
-			cacheController.cacheStats.BLOCKWRITE_HIT++;
+			if(trackStats)cacheController.cacheStats.BLOCKWRITE_HIT++;
 		}else{// Did not Find Start and/or End Blocks
 			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.getBlock()...Start and/or End Block Miss");
 			
 			// Count as a MISS if one or both Blocks are not in memory
-			cacheController.cacheStats.BLOCKWRITE_MISS++;
+			if(trackStats)cacheController.cacheStats.BLOCKWRITE_MISS++;
 			
 			if(localStartMemoryAddress == null){// Resolve Start Block Miss
 				if(DEBUG_LEVEL >= 4)System.out.println("L"+ cacheLevel + "-Cache.putBlock()...Resolving Start Block Miss");
@@ -399,10 +399,10 @@ public class Cache {
 				Integer mAddress = getNextWriteLocationLRU(localStartBlockAddress);
 				
 				// Write Back
-				if(memory[mAddress] != null)writeBack(mAddress);
+				if(memory[mAddress] != null)writeBack(trackStats, mAddress);
 				
 				// Resolve Miss
-				resolveMiss(mAddress, localStartBlockAddress);
+				resolveMiss(trackStats, mAddress, localStartBlockAddress);
 				
 				// Get Next Write Location For Missed Block and Verify it is in Memory
 				localStartMemoryAddress = findBlockInMemory(localStartBlockAddress);
@@ -414,9 +414,9 @@ public class Cache {
 				if(DEBUG_LEVEL >= 4)System.out.println("L"+ cacheLevel + "-Cache.putBlock()...Resolving End Block Miss");
 				Integer mAddress = getNextWriteLocationLRU(localEndBlockAddress);
 				// Write Back
-				if(memory[mAddress] != null)writeBack(mAddress);
+				if(memory[mAddress] != null)writeBack(trackStats, mAddress);
 				// Resolve Miss
-				resolveMiss(mAddress, localEndBlockAddress);
+				resolveMiss(trackStats, mAddress, localEndBlockAddress);
 			}
 			
 			// Get Next Write Location For Missed Block and Verify it is in Memory
@@ -524,17 +524,17 @@ public class Cache {
 	 * @param bAddress Block Address to place in the mAddress
 	 * @throws Exception
 	 */
-	protected final void resolveMiss(Integer mAddress, Integer bAddress) throws Exception{
+	protected final void resolveMiss(Boolean trackStats, Integer mAddress, Integer bAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss(" + mAddress + ", " + bAddress + ")");
 		
 		MemoryBlock block;
 		
 		if(cacheController.parentMemory != null){
 			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss()...Getting From Parent Memory");
-			block = cacheController.parentMemory.getBlock(bAddress, blockSize);
+			block = cacheController.parentMemory.getBlock(trackStats, bAddress, blockSize);
 		}else if(cacheController.parentCache != null){
 			if(DEBUG_LEVEL >= 3)System.out.println("L"+ cacheLevel + "-Cache.resolveMiss()...Getting From Parent Cache");
-			block = cacheController.parentCache.getBlock(bAddress, blockSize);
+			block = cacheController.parentCache.getBlock(trackStats, bAddress, blockSize);
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}
@@ -554,14 +554,14 @@ public class Cache {
 	 * @param mAddress Cache Location (Slot) to be Written Back
 	 * @throws Exception
 	 */
-	protected final void writeBack(Integer mAddress) throws Exception{
+	protected final void writeBack(Boolean trackStats, Integer mAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("L"+ cacheLevel + "-Cache.writeBack(" + mAddress + ")");
 		
 		// Determine Where to Write Back the Block at mAddress
 		if(cacheController.parentMemory != null){
-			cacheController.parentMemory.putBlock(memory[mAddress]);
+			cacheController.parentMemory.putBlock(trackStats, memory[mAddress]);
 		}else if(cacheController.parentCache != null){
-			cacheController.parentCache.putBlock(memory[mAddress]);
+			cacheController.parentCache.putBlock(trackStats, memory[mAddress]);
 		}else{
 			throw new NullPointerException("Parent Memory and Cache is NULL");
 		}

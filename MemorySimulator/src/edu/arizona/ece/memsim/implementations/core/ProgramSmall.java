@@ -23,7 +23,7 @@ public class ProgramSmall{
 			Reset();
 			RandomAccess();
 			Reset();
-			StrideAccess(2);
+			StrideAccess(true, 32);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -41,9 +41,9 @@ public class ProgramSmall{
 			Integer pos = rand.nextInt(8192);
 			
 			if(rw == 0){// Read
-				L1.get(pos);
+				L1.get(true, pos);
 			}else if(rw == 1){
-				L1.put(pos, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+				L1.put(true, pos, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 			}else{
 				throw new Exception("Random Gave Value other than 0 or 1");
 			}
@@ -55,23 +55,38 @@ public class ProgramSmall{
 		printStats("M1", mem.getMemoryStats());
 	}
 	
-	public static void StrideAccess(Integer strideSize) throws Exception{
+	/**
+	 * Performs Stride Access
+	 * 
+	 * @param randStride TRUE Indicates Random Stride Size, FALSE Indicates Fixed Stride Size
+	 * @param strideSize If randStride is TRUE, this is the Largest Stride Possible; if randStride is FALSE this is the Stride Size
+	 * @throws Exception
+	 */
+	public static void StrideAccess(Boolean randStride, Integer strideSize) throws Exception{
 		System.out.println("\n+------------------------------+");
 		System.out.println("| Running Stride Memory Access |");
 		System.out.println("+------------------------------+\n");
 		
 		Random rand = new Random();
 		
-		for(int i = 0 ; i < 8192 / strideSize; i++){
+		for(int i = 0 ; i < 8192 - strideSize; i++){
 			Integer startLocation = rand.nextInt(8192 - strideSize - 1);
 			
-			for(int j = 0; j < strideSize; j++){
+			Integer sS = new Integer(0);
+			
+			if(randStride){
+				sS = rand.nextInt(strideSize);
+			}else{
+				sS = strideSize;
+			}
+			
+			for(int j = 0; j < sS; j++){
 				Integer rw = rand.nextInt(2);
 				
 				if(rw == 0){// Read
-					L1.get(startLocation + i);
+					L1.get(true, (startLocation + i));
 				}else if(rw == 1){// Write
-					L1.put(startLocation + i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+					L1.put(true, (startLocation + i), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 				}else{
 					throw new Exception("Random Gave Value other than 0 or 1");
 				}
@@ -95,9 +110,9 @@ public class ProgramSmall{
 			Integer rw = rand.nextInt(2);
 			
 			if(rw == 0){// Read
-				L1.get(i);
+				L1.get(true, i);
 			}else if(rw == 1){
-				L1.put(i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+				L1.put(true, i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 			}else{
 				throw new Exception("Random Gave Value other than 0 or 1");
 			}
