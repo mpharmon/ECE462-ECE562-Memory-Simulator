@@ -359,11 +359,15 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		
 		if(cacheCoherencyEnabled){
 			Iterator<CacheController> childCacheIterator = childCaches.iterator();
+			
+			// Distribute Write Miss Message to all Child Caches
 			while(childCacheIterator.hasNext()){
 				childCacheIterator.next().onWriteMiss(address);
 			}
-			// TODO: Handle - Write Back Value at Address to Memory and Invalidate
+			
 			cacheStats.INVALIDATE++;
+			
+			// TODO: Implement Cache Coherancy
 		}
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.onWriteMiss()...Finished");
@@ -375,10 +379,15 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		
 		if(cacheCoherencyEnabled){
 			Iterator<CacheController> childCacheIterator = childCaches.iterator();
+			
+			// Distribute Read Miss to all Child Caches
 			while(childCacheIterator.hasNext()){
 				childCacheIterator.next().onReadMiss(address);
 			}
-			// TODO: Handle - Write Back Value at Address to Memory
+			
+			// TODO: Increment Proper Statistics
+			
+			// TODO: Implement Cache Coherancy
 		}
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.onReadMiss()...Finished");
@@ -390,11 +399,14 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		
 		if(cacheCoherencyEnabled){
 			Iterator<CacheController> childCacheIterator = childCaches.iterator();
+			
 			while(childCacheIterator.hasNext()){
 				childCacheIterator.next().onWriteUpdate(address);
 			}
+			
 			cacheStats.INVALIDATE++;
-			// TODO: Handle Locally
+			
+			// TODO: Implement Cache Coherancy
 		}
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.onWriteUpdate()...Finished");
