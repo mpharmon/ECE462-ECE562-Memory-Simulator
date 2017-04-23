@@ -47,7 +47,7 @@ public class CP  {
 		TotalMemSize = 131072;
 		//TotalMemSize = 134217728;
 		mem = null;
-		mem = new Memory(TotalMemSize, BlockSize, 200);// TotalMemSize B, BlockSize B Block, 200 Cycle Access 
+		mem = new Memory(TotalMemSize, 200);// TotalMemSize B, BlockSize B Block, 200 Cycle Access 
 		L2 = null;//Cache controller to keep it consistent for the prefetching on L1 cache 
 		L2 = new CacheController(2, 131072, BlockSize, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access		
 		L1 = null; // fully asocciative is 1
@@ -175,7 +175,6 @@ public class CP  {
 	
 	
 	protected static void printStats(String prefix, CacheStatistics stats){
-		System.out.println(prefix + ".HitRatio\t\t" + stats.HitRatio);
 		System.out.println(prefix + ".ACCESSES\t\t" + stats.ACCESS);
 		System.out.println(prefix + ".READ_TOTAL\t\t" + (stats.READ_HIT + stats.READ_MISS));
 		System.out.println(prefix + ".READ_HITS\t\t" + stats.READ_HIT);
