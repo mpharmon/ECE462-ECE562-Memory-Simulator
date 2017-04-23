@@ -32,36 +32,8 @@ public class StreamPrefetcherCacheController extends CacheController {
 		
 		returnValue.addMemoryElement(cache.get(eAddress));
 		cache.get(eAddress + 1);
-		cache.get(eAddress + 2);
-		cache.get(eAddress + 3);
+		cache.get(eAddress + 32);
 		cache.get(eAddress + 64);
-		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
-		
-		cacheStats.ACCESS++;
-		
-		return returnValue;
-	}
-
-	/**
-	 * Gets a MemoryBlock from Cache, and loads it from a Parent Cache or Parent Memory If Necessary
-	 * 
-	 * @param bAddress Address of the MemoryBlock desired
-	 * @return MemoryBlock
-	 * @throws Exception 
-	 */
-	public MemoryBlock getBlock(Integer bAddress) throws Exception {
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.getBlock(" + bAddress + ")");
-		
-		// Prevent Block Access if Child Cache(s) is/are not Present
-		if(childCaches.size() == 0)throw new IllegalAccessException("Can Not Call getBlock if Child Caches Are Not Present");
-		
-		// Validity Checks
-		if(bAddress == null)throw new NullPointerException("address Can Not Be Null");
-		if(bAddress < 0)throw new IllegalArgumentException("address Must Be Greater Than Zero");
-		
-		MemoryBlock returnValue = cache.getBlock(bAddress, blockSize);
-		
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
@@ -89,35 +61,15 @@ public class StreamPrefetcherCacheController extends CacheController {
 		
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
 		
-		cache.put(eAddress, bite);
+		cache.get(eAddress + 1);
+		cache.get(eAddress + 32);
+		cache.get(eAddress + 64);
 		
 		cacheStats.ACCESS++;
 		//cacheStats.WRITE++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
-	
-	/**
-	 * Puts a MemoryBlock Into This Level of Cache
-	 * 
-	 * @param block MemoryBlock to be written
-	 * @throws Exception 
-	 */
-	public void putBlock(MemoryBlock block) throws Exception{
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.putBlock(" + block.getBlockAddress() + ")");
-		
-		// Prevent Block Access if Child Cache(s) is/are not Present
-		if(childCaches.size() == 0)throw new IllegalAccessException("Can Not Call getBlock if Child Caches Are Not Present");
-			
-		// Validity Checking
-		if(block == null)throw new NullPointerException("block Can Not Be NULL");
-		
-		cache.putBlock(block);
-		
-		cacheStats.ACCESS++;
-		//cacheStats.BLOCKWRITE++;
-		
-		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
-	}
+
 
 }
