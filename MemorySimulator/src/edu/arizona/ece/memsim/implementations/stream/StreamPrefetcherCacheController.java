@@ -2,7 +2,6 @@ package edu.arizona.ece.memsim.implementations.stream;
 
 import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.Memory;
-import edu.arizona.ece.memsim.model.MemoryBlock;
 import edu.arizona.ece.memsim.model.MemoryResult;
 
 public class StreamPrefetcherCacheController extends CacheController {
@@ -32,12 +31,10 @@ public class StreamPrefetcherCacheController extends CacheController {
 		
 		returnValue.addMemoryElement(cache.get(true, eAddress));
 		
-		cache.get(false, eAddress + 1);
 		cache.get(false, eAddress + 32);
 		cache.get(false, eAddress + 64);
+		cache.get(false, eAddress + 96);
 		cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 192);
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
@@ -70,14 +67,12 @@ public class StreamPrefetcherCacheController extends CacheController {
 		cache.get(false, eAddress + 1);
 		cache.get(false, eAddress + 32);
 		cache.get(false, eAddress + 64);
+		cache.get(false, eAddress + 96);
 		cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 192);
+
 		
 		if(trackStats)cacheStats.ACCESS++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
-
-
 }
