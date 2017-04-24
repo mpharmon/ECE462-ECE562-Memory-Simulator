@@ -17,6 +17,8 @@ public class ReportTestsProject{
 	
 	protected static Memory mem;
 	
+	public static Integer SELECT = 0;
+	
 	public static void main(String[] args) throws InterruptedException{
 		Run();
 	}
@@ -39,7 +41,12 @@ public class ReportTestsProject{
 			StrideAccess(100, 128, 32);
 			
 			System.out.println("\n+----------------------------------+");
-			System.out.println("| Running Linear Memory Access 100 |");
+			System.out.println("| Running Linear Short Memory Access 100 |");
+			System.out.println("+----------------------------------+\n");
+			LinearAccess(100, true, 2);
+			
+			System.out.println("\n+----------------------------------+");
+			System.out.println("| Running Linear Long Memory Access 100 |");
 			System.out.println("+----------------------------------+\n");
 			LinearAccess(100, true, 128);
 			
@@ -61,7 +68,7 @@ public class ReportTestsProject{
 		
 		// Run Test 'k' Times
 		for(int k = 0; k < times; k++){
-			ResetMarkov(false);
+			prefetchSelect(SELECT, false);
 			
 			for(int i = 0; i < 8192; i++){
 				Integer pos = rand.nextInt(8192);
@@ -103,7 +110,7 @@ public class ReportTestsProject{
 		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			ResetMarkov(false);
+			prefetchSelect(SELECT, false);
 			
 			Integer rS = new Integer(0);
 			
@@ -164,7 +171,7 @@ public class ReportTestsProject{
 		ArrayList<CacheStatistics> L2StatsArray = new ArrayList<CacheStatistics>();
 		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
 		
-		ResetMarkov(false);
+		prefetchSelect(SELECT, false);
 		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
@@ -208,7 +215,7 @@ public class ReportTestsProject{
 		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			ResetMarkov(false);
+			prefetchSelect(SELECT, false);
 			
 			for(int i = 0; i < 8192; i++){
 		
@@ -241,7 +248,7 @@ public class ReportTestsProject{
 		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
 		
 		for(int k = 0; k < times; k++){
-			ResetMarkov(false);
+			prefetchSelect(SELECT, false);
 			
 			for(int j = 0; j < times; j++){
 				for(int i = 0; i < numBlocks; i++){
@@ -329,5 +336,18 @@ public class ReportTestsProject{
 		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
 		L1 = null;
 		L1 = new MarkovPrefetcherCacheController(1, 1024, 32, 0, 1, L2, mem.getSize());// 1KB, 32B Block, Fully Associative, 1 Cycle Access
+	}
+	//Prefetcher selector
+	//0 - Base
+	//1 - Nextline
+	//2 - Stream
+	//3 - Markov
+	protected static void prefetchSelect(Integer select, boolean display)  throws Exception{
+		switch(select){
+			case 1: 	ResetNextLine(display); break;
+			case 2: 	ResetStream(display);   break;
+			case 3: 	ResetMarkov(display);   break;
+			default:	ResetBase(display); 	break;
+		}
 	}
 }
