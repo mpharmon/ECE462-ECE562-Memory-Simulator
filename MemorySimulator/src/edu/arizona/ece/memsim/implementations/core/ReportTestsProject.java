@@ -20,10 +20,10 @@ public class ReportTestsProject{
 	
 	public static void Run() throws InterruptedException{
 		try {
-			SequentialAccess(1000);
-			RandomAccess(1000);
-			StrideAccess(1000, 32);
-			LinearAccess(1000, true, 32);
+			SequentialAccess(100);
+			RandomAccess(100);
+			StrideAccess(100, 16, 256);
+			LinearAccess(100, true, 32);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -93,7 +93,15 @@ public class ReportTestsProject{
 		for(int k = 0; k < times; k++){
 			Reset(false);
 			
-			for(int i = 0 ; i < 8192 - strideSize; i++){
+			Integer rS = new Integer(0);
+			
+			if(randStride){
+				rS = strideSize / 2;
+			}else{
+				rS = strideSize;
+			}
+			
+			for(int i = 0 ; i < 8192 / rS; i++){
 				Integer startLocation = rand.nextInt(8192 - strideSize - 1);
 				
 				Integer sS = new Integer(0);
@@ -108,9 +116,9 @@ public class ReportTestsProject{
 					Integer rw = rand.nextInt(2);
 				
 					if(rw == 0){// Read
-						L1.get(true, (startLocation + i));
+						L1.get(true, (startLocation + j));
 					}else if(rw == 1){// Write
-						L1.put(true, (startLocation + i), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+						L1.put(true, (startLocation + j), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 					}else{
 						throw new Exception("Random Gave Value other than 0 or 1");
 					}
@@ -131,18 +139,13 @@ public class ReportTestsProject{
 		M1Stats.print("M1");
 	}
 	
-	
 	/**
-	 * Performs Stride Access
-	 * 
-	 * @param times
-	 * @param randStride
-	 * @param strideSize
+	 * @param times Number of Times to Run the Simulation
+	 * @param strideSize Size of the Stride to Access
+	 * @param numStride Number of Strides
 	 * @throws Exception
 	 */
 	public static void StrideAccess(Integer times, Integer strideSize, Integer numStride) throws Exception{
-		
-		
 		Random rand = new Random();
 		
 		ArrayList<CacheStatistics> L1StatsArray = new ArrayList<CacheStatistics>();
@@ -157,14 +160,17 @@ public class ReportTestsProject{
 		for(int k = 0; k < times; k++){
 			Reset(false);
 			
-			for(int i = 0; i < numStride; i++){
-				for(int j = 0; j < numStrideElements; j++){
+			Integer startAddress = rand.nextInt(8193 - strideSize);
+			Integer endAddress = startAddress + (strideSize * numStride) - 1;
+			
+			for(int i = startAddress; i < + startAddress + numStride; i++){// Columns
+				for(int j = i; j <= endAddress; j += strideSize){// Elements
 					Integer rw = rand.nextInt(2);
 					
 					if(rw == 0){// Read
-						L1.get(true, (i * j + j));
+						L1.get(true, j);
 					}else if(rw == 1){// Write
-						L1.put(true, (i * j + j), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+						L1.put(true, j, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 					}else{
 						throw new Exception("Random Gave Value other than 0 or 1");
 					}
