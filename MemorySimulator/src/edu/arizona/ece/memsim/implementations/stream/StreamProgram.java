@@ -35,6 +35,6 @@ public class StreamProgram extends ProgramSmall {
 		L2 = null;
 		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
 		L1 = null;
-		L1 = new StreamPrefetcherCacheController(1, 1024, 64, 0, 1, L2);// 1KB, 32B Block, Fully Associative, 1 Cycle Access
+		L1 = new StreamPrefetcherCacheController(1, 1024, 32, 0, 1, L2);// 1KB, 32B Block, Fully Associative, 1 Cycle Access
 	}
 }
