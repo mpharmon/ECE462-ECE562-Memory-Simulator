@@ -171,9 +171,9 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * @return {@link MemoryResult} Containing the {@link MemoryElement} Refrenced By eAddress
 	 * @throws Exception
 	 */
-	public MemoryResult get(Integer eAddress) throws Exception{
-		return get(true, eAddress);
-	}
+	//public MemoryResult get(Integer eAddress) throws Exception{
+	//	return get(true, eAddress);
+	//}
 	
 	/**
 	 * Returns a {@link MemoryResult} that Wraps a {@link MemoryElement}
@@ -183,7 +183,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 	 * @throws Exception 
 	 */
 	public MemoryResult get(Boolean trackStats, Integer eAddress) throws Exception{
-		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.get(" + eAddress + ")");
+		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + "-CacheController.get(" + eAddress + ")");
 		
 		// Prevent Element Access if ChildCache(s) is/are Present
 		if(childCaches.size() > 0)throw new IllegalAccessException("Can Not Call put if Child Caches Are Present");
@@ -197,7 +197,7 @@ public class CacheController implements CacheCallBack, WriteInvalidateListener{
 		
 		returnValue.addMemoryElement(cache.get(trackStats, eAddress));
 		
-		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + " CacheController.get()...Finished");
+		if(DEBUG_LEVEL >= 2)System.out.println("L" + cacheLevel + "-CacheController.get()...Finished");
 		
 		if(trackStats)cacheStats.ACCESS++;
 		

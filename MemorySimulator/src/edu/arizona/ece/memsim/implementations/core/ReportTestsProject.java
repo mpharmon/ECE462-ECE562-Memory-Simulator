@@ -1,5 +1,7 @@
 package edu.arizona.ece.memsim.implementations.core;
 
+import edu.arizona.ece.memsim.implementations.nextline.NextlinePrefetcherCacheController;
+import edu.arizona.ece.memsim.implementations.stream.StreamPrefetcherCacheController;
 import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.CacheStatistics;
 import edu.arizona.ece.memsim.model.CacheStatisticsAnalysis;
@@ -20,10 +22,10 @@ public class ReportTestsProject{
 	
 	public static void Run() throws InterruptedException{
 		try {
-			SequentialAccess(100);
-			RandomAccess(100);
-			StrideAccess(100, 16, 256);
-			LinearAccess(100, true, 32);
+			//SequentialAccess(100);
+			//RandomAccess(100);
+			StrideAccess(100, 128, 32);
+			//LinearAccess(100, true, 128);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -42,7 +44,7 @@ public class ReportTestsProject{
 		
 		// Run Test 'k' Times
 		for(int k = 0; k < times; k++){
-			Reset(false);
+			ResetStream(false);
 			
 			for(int i = 0; i < 8192; i++){
 				Integer rw = rand.nextInt(2);
@@ -91,7 +93,7 @@ public class ReportTestsProject{
 		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			Reset(false);
+			ResetBase(false);
 			
 			Integer rS = new Integer(0);
 			
@@ -158,12 +160,12 @@ public class ReportTestsProject{
 		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			Reset(false);
+			ResetBase(false);
 			
-			Integer startAddress = rand.nextInt(8193 - strideSize);
+			Integer startAddress = rand.nextInt(8193 - (strideSize * numStride));
 			Integer endAddress = startAddress + (strideSize * numStride) - 1;
 			
-			for(int i = startAddress; i < + startAddress + numStride; i++){// Columns
+			for(int i = startAddress; i < startAddress + strideSize; i++){// Columns
 				for(int j = i; j <= endAddress; j += strideSize){// Elements
 					Integer rw = rand.nextInt(2);
 					
@@ -204,7 +206,7 @@ public class ReportTestsProject{
 		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			Reset(false);
+			ResetStream(false);
 			
 			for(int i = 0; i < 8192; i++){
 				Integer rw = rand.nextInt(2);
@@ -232,12 +234,12 @@ public class ReportTestsProject{
 		M1Stats.print("M1");
 	}
 	
-	protected static void Reset(Boolean display) throws Exception{
+	protected static void ResetBase(Boolean display) throws Exception{
 		
 		if(display){
-			System.out.println("\n+---------------+");
-			System.out.println("| Running Reset |");
-			System.out.println("+---------------+\n");
+			System.out.println("\n+--------------------+");
+			System.out.println("| Running Base Reset |");
+			System.out.println("+--------------------+\n");
 		}
 		
 		mem = null;
@@ -246,5 +248,37 @@ public class ReportTestsProject{
 		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
 		L1 = null;
 		L1 = new CacheController(1, 1024, 32, 0, 1, L2);// 1KB, 32B Block, Fully Associative, 1 Cycle Access
+	}
+	
+	protected static void ResetNextLine(Boolean display) throws Exception{
+		
+		if(display){
+			System.out.println("\n+------------------------+");
+			System.out.println("| Running Nextline Reset |");
+			System.out.println("+------------------------+\n");
+		}
+		
+		mem = null;
+		mem = new Memory(16384, 200);// 16KB, 200 Cycle Access
+		L2 = null;
+		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
+		L1 = null;
+		L1 = new NextlinePrefetcherCacheController(1, 1024, 32, 0, 1, L2);// 1KB, 32B Block, Fully Associative, 1 Cycle Access
+	}
+	
+	protected static void ResetStream(Boolean display) throws Exception{
+		
+		if(display){
+			System.out.println("\n+----------------------+");
+			System.out.println("| Running Stream Reset |");
+			System.out.println("+---------------------+\n");
+		}
+		
+		mem = null;
+		mem = new Memory(16384, 200);// 16KB, 200 Cycle Access
+		L2 = null;
+		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
+		L1 = null;
+		L1 = new StreamPrefetcherCacheController(1, 1024, 32, 0, 1, L2);// 1KB, 32B Block, Fully Associative, 1 Cycle Access
 	}
 }

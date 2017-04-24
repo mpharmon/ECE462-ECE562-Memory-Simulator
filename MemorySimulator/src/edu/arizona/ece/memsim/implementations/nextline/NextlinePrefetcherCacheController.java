@@ -10,16 +10,18 @@ public class NextlinePrefetcherCacheController extends CacheController {
 	public NextlinePrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			CacheController pCache) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pCache);
+		if(DEBUG_LEVEL >= 1)System.out.println("NextlinePrefetcherCacheController(" + level + ", " + tSize + ", " + bSize + ", " + assoc + ", " + aTime + ", Cache)");
 	}
 	
 	public NextlinePrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
 			Memory pMemory) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
+		if(DEBUG_LEVEL >= 1)System.out.println("NextlinePrefetcherCacheController(" + level + ", " + tSize + ", " + bSize + ", " + assoc + ", " + aTime + ", Memory)");
 	}
 	
 	@Override
-	public MemoryResult get(Integer eAddress) throws Exception{
-		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.get(" + eAddress + ")");
+	public MemoryResult get(Boolean trackStats, Integer eAddress) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + "-NextlinePrefetcherCacheController.get(" + eAddress + ")");
 		
 		// Prevent Element Access if ChildCache(s) is/are Present
 		if(childCaches.size() > 0)throw new IllegalAccessException("Can Not Call put if Child Caches Are Present");
@@ -34,11 +36,12 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		returnValue.addMemoryElement(cache.get(true, eAddress));
 		
 		// Next Line Pre-Fetch
+		if(DEBUG_LEVEL >= 3)System.out.println("Getting Next Element");
 		cache.get(false, (eAddress + 1));
 
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
-		cacheStats.ACCESS++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		return returnValue;
 	}
@@ -50,8 +53,9 @@ public class NextlinePrefetcherCacheController extends CacheController {
 	 * @return MemoryBlock
 	 * @throws Exception 
 	 */
-	public MemoryBlock getBlock(Integer bAddress) throws Exception {
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.getBlock(" + bAddress + ")");
+	@Override
+	public MemoryBlock getBlock(Boolean trackStats, Integer bAddress, Integer size) throws Exception {
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-NextlinePrefetcherCacheController.getBlock(" + bAddress + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
 		if(childCaches.size() == 0)throw new IllegalAccessException("Can Not Call getBlock if Child Caches Are Not Present");
@@ -65,7 +69,7 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
-		cacheStats.ACCESS++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		return returnValue;
 	}
@@ -77,8 +81,9 @@ public class NextlinePrefetcherCacheController extends CacheController {
 	 * @param bite Byte of the data being written
 	 * @throws Exception 
 	 */
-	public void put(Integer eAddress, Byte bite) throws Exception {
-		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.put(" + eAddress + ", " + bite +")");
+	@Override
+	public void put(Boolean trackStats, Integer eAddress, Byte bite) throws Exception {
+		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + "-NextlinePrefetcherCacheController.put(" + eAddress + ", " + bite +")");
 		
 		//Prevent Element Access if ChildCache(s) is/are Present
 		if(childCaches.size() > 0)throw new IllegalAccessException("Can Not Call put if Child Caches Are Present");
@@ -94,7 +99,7 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		// Next Line Pre-Fetch
 		cache.get(false, (eAddress + 1));
 		
-		cacheStats.ACCESS++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
@@ -105,8 +110,9 @@ public class NextlinePrefetcherCacheController extends CacheController {
 	 * @param block MemoryBlock to be written
 	 * @throws Exception 
 	 */
-	public void putBlock(MemoryBlock block) throws Exception{
-		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + " CacheController.putBlock(" + block.getBlockAddress() + ")");
+	@Override
+	public void putBlock(Boolean trackStats, MemoryBlock block) throws Exception{
+		if(DEBUG_LEVEL >= 1)System.out.println("L" + cacheLevel + "-NextlinePrefetcherCacheController.putBlock(" + block.getBlockAddress() + ")");
 		
 		// Prevent Block Access if Child Cache(s) is/are not Present
 		if(childCaches.size() == 0)throw new IllegalAccessException("Can Not Call getBlock if Child Caches Are Not Present");
@@ -117,7 +123,7 @@ public class NextlinePrefetcherCacheController extends CacheController {
 		cache.putBlock(true, block);
 		// TODO: Do we need to do a next-block pre-fetch here?
 		
-		cacheStats.ACCESS++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}

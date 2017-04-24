@@ -17,7 +17,7 @@ public class StreamPrefetcherCacheController extends CacheController {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
 	}
 	
-	public MemoryResult get(Integer eAddress) throws Exception{
+	public MemoryResult get(Boolean trackStats, Integer eAddress) throws Exception{
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.get(" + eAddress + ")");
 		
 		// Prevent Element Access if ChildCache(s) is/are Present
@@ -31,7 +31,9 @@ public class StreamPrefetcherCacheController extends CacheController {
 		MemoryResult returnValue = new MemoryResult();
 		
 		returnValue.addMemoryElement(cache.get(true, eAddress));
-		//cache.get(false, eAddress + 1);
+		
+		cache.get(false, eAddress + 1);
+		cache.get(false, eAddress + 32);
 		cache.get(false, eAddress + 64);
 		cache.get(false, eAddress + 128);
 		//cache.get(false, eAddress + 128);
@@ -39,7 +41,7 @@ public class StreamPrefetcherCacheController extends CacheController {
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
-		cacheStats.ACCESS++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		return returnValue;
 	}
@@ -51,7 +53,7 @@ public class StreamPrefetcherCacheController extends CacheController {
 	 * @param bite Byte of the data being written
 	 * @throws Exception 
 	 */
-	public void put(Integer eAddress, Byte bite) throws Exception {
+	public void put(Boolean trackStats, Integer eAddress, Byte bite) throws Exception {
 		if(DEBUG_LEVEL >= 1)System.out.println("\nL" + cacheLevel + " CacheController.put(" + eAddress + ", " + bite +")");
 		
 		//Prevent Element Access if ChildCache(s) is/are Present
@@ -63,14 +65,16 @@ public class StreamPrefetcherCacheController extends CacheController {
 		
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
 		
-		//cache.get(false, eAddress + 1);
+		cache.put(trackStats, eAddress, bite);
+		
+		cache.get(false, eAddress + 1);
+		cache.get(false, eAddress + 32);
 		cache.get(false, eAddress + 64);
 		cache.get(false, eAddress + 128);
 		//cache.get(false, eAddress + 128);
 		//cache.get(false, eAddress + 192);
 		
-		cacheStats.ACCESS++;
-		//cacheStats.WRITE++;
+		if(trackStats)cacheStats.ACCESS++;
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Finished");
 	}
