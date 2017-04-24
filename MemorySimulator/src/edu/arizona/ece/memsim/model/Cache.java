@@ -629,4 +629,6 @@ public class Cache {
 		}
 	}
 	
+	public Integer getBlockSize(){return blockSize;}
+	
 }
