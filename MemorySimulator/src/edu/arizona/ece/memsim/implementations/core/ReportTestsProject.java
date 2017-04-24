@@ -1,5 +1,6 @@
 package edu.arizona.ece.memsim.implementations.core;
 
+import edu.arizona.ece.memsim.implementations.markov.MarkovPrefetcherCacheController;
 import edu.arizona.ece.memsim.implementations.nextline.NextlinePrefetcherCacheController;
 import edu.arizona.ece.memsim.implementations.stream.StreamPrefetcherCacheController;
 import edu.arizona.ece.memsim.model.CacheController;
@@ -22,10 +23,30 @@ public class ReportTestsProject{
 	
 	public static void Run() throws InterruptedException{
 		try {
-			//SequentialAccess(100);
-			//RandomAccess(100);
+			System.out.println("\n+--------------------------------------+");
+			System.out.println("| Running Sequential Memory Access 100 |");
+			System.out.println("+--------------------------------------+");
+			SequentialAccess(100);
+			
+			System.out.println("\n+----------------------------------+");
+			System.out.println("| Running Random Memory Access 100 |");
+			System.out.println("+----------------------------------+\n");
+			RandomAccess(100);
+			
+			System.out.println("\n+----------------------------------+");
+			System.out.println("| Running Stride Memory Access 100 |");
+			System.out.println("+----------------------------------+\n");
 			StrideAccess(100, 128, 32);
-			//LinearAccess(100, true, 128);
+			
+			System.out.println("\n+----------------------------------+");
+			System.out.println("| Running Linear Memory Access 100 |");
+			System.out.println("+----------------------------------+\n");
+			LinearAccess(100, true, 128);
+			
+			System.out.println("\n+-----------------------------------------+");
+			System.out.println("| Running Sparse Stride Memory Access 100 |");
+			System.out.println("+-----------------------------------------+\n");
+			SparseStride(100, 32, 8);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -38,24 +59,17 @@ public class ReportTestsProject{
 		ArrayList<CacheStatistics> L2StatsArray = new ArrayList<CacheStatistics>();
 		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
 		
-		System.out.println("\n+----------------------------------+");
-		System.out.println("| Running Random Memory Access " + times + " |");
-		System.out.println("+----------------------------------+\n");
-		
 		// Run Test 'k' Times
 		for(int k = 0; k < times; k++){
-			ResetStream(false);
+			ResetMarkov(false);
 			
 			for(int i = 0; i < 8192; i++){
-				Integer rw = rand.nextInt(2);
 				Integer pos = rand.nextInt(8192);
 			
-				if(rw == 0){// Read
+				if(rand.nextBoolean()){// Read
 					L1.get(true, pos);
-				}else if(rw == 1){
-					L1.put(true, pos, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 				}else{
-					throw new Exception("Random Gave Value other than 0 or 1");
+					L1.put(true, pos, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
 				}
 			}
 			L1StatsArray.add(L1.getCacheStats());
@@ -87,13 +101,9 @@ public class ReportTestsProject{
 		ArrayList<CacheStatistics> L2StatsArray = new ArrayList<CacheStatistics>();
 		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
 		
-		System.out.println("\n+----------------------------------+");
-		System.out.println("| Running Linear Memory Access " + times + " |");
-		System.out.println("+----------------------------------+\n");
-		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			ResetBase(false);
+			ResetMarkov(false);
 			
 			Integer rS = new Integer(0);
 			
@@ -154,14 +164,10 @@ public class ReportTestsProject{
 		ArrayList<CacheStatistics> L2StatsArray = new ArrayList<CacheStatistics>();
 		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
 		
-		System.out.println("\n+----------------------------------+");
-		System.out.println("| Running Stride Memory Access " + times + " |");
-		System.out.println("+----------------------------------+\n");
+		ResetMarkov(false);
 		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			ResetBase(false);
-			
 			Integer startAddress = rand.nextInt(8193 - (strideSize * numStride));
 			Integer endAddress = startAddress + (strideSize * numStride) - 1;
 			
@@ -200,23 +206,51 @@ public class ReportTestsProject{
 		ArrayList<CacheStatistics> L2StatsArray = new ArrayList<CacheStatistics>();
 		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
 		
-		System.out.println("\n+--------------------------------------+");
-		System.out.println("| Running Sequential Memory Access " + times + " |");
-		System.out.println("+--------------------------------------+");
-		
 		// Run Simulation 'k' Times
 		for(int k = 0; k < times; k++){
-			ResetStream(false);
+			ResetMarkov(false);
 			
 			for(int i = 0; i < 8192; i++){
-				Integer rw = rand.nextInt(2);
 		
-				if(rw == 0){// Read
+				if(rand.nextBoolean()){// Read
 					L1.get(true, i);
-				}else if(rw == 1){
+				}else{// Write
 					L1.put(true, i, (byte)rand.nextInt(Byte.MAX_VALUE + 1));
-				}else{
-					throw new Exception("Random Gave Value other than 0 or 1");
+				}
+			}
+			
+			L1StatsArray.add(L1.getCacheStats());
+			L2StatsArray.add(L2.getCacheStats());
+			M1StatsArray.add(mem.getMemoryStats());
+		}
+		
+		CacheStatisticsAnalysis L1Stats = CacheStatisticsAnalysis.AnalyzeArrayList(L1StatsArray);
+		CacheStatisticsAnalysis L2Stats = CacheStatisticsAnalysis.AnalyzeArrayList(L2StatsArray);
+		CacheStatisticsAnalysis M1Stats = CacheStatisticsAnalysis.AnalyzeArrayList(M1StatsArray);
+		
+		L1Stats.print("L1");
+		L2Stats.print("L2");
+		M1Stats.print("M1");
+	}
+	
+	public static void SparseStride(Integer times, Integer blockSize, Integer numBlocks) throws Exception{
+		Random rand = new Random();
+		
+		ArrayList<CacheStatistics> L1StatsArray = new ArrayList<CacheStatistics>();
+		ArrayList<CacheStatistics> L2StatsArray = new ArrayList<CacheStatistics>();
+		ArrayList<CacheStatistics> M1StatsArray = new ArrayList<CacheStatistics>();
+		
+		for(int k = 0; k < times; k++){
+			ResetMarkov(false);
+			
+			for(int j = 0; j < times; j++){
+				for(int i = 0; i < numBlocks; i++){
+				
+					if(rand.nextBoolean()){
+						L1.get(true, (k * blockSize +  i * blockSize * blockSize));
+					}else{
+						L1.put(true, ((k * blockSize +  i * blockSize * blockSize)), (byte)rand.nextInt(Byte.MAX_VALUE + 1));
+					}
 				}
 			}
 			
@@ -280,5 +314,20 @@ public class ReportTestsProject{
 		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
 		L1 = null;
 		L1 = new StreamPrefetcherCacheController(1, 1024, 32, 0, 1, L2);// 1KB, 32B Block, Fully Associative, 1 Cycle Access
+	}
+	
+	protected static void ResetMarkov(Boolean display) throws Exception{
+		if(display){
+			System.out.println("\n+----------------------+");
+			System.out.println("| Running Markov Reset |");
+			System.out.println("+---------------------+\n");
+		}
+		
+		mem = null;
+		mem = new Memory(16384, 200);// 16KB, 200 Cycle Access
+		L2 = null;
+		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
+		L1 = null;
+		L1 = new MarkovPrefetcherCacheController(1, 1024, 32, 0, 1, L2, mem.getSize());// 1KB, 32B Block, Fully Associative, 1 Cycle Access
 	}
 }
