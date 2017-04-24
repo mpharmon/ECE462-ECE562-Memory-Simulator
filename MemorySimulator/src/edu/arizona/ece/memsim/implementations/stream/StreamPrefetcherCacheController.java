@@ -31,11 +31,11 @@ public class StreamPrefetcherCacheController extends CacheController {
 		MemoryResult returnValue = new MemoryResult();
 		
 		returnValue.addMemoryElement(cache.get(true, eAddress));
-		cache.get(false, eAddress + 1);
-		cache.get(false, eAddress + 32);
+		//cache.get(false, eAddress + 1);
 		cache.get(false, eAddress + 64);
 		cache.get(false, eAddress + 128);
-		cache.get(false, eAddress + 192);
+		//cache.get(false, eAddress + 128);
+		//cache.get(false, eAddress + 192);
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
@@ -63,11 +63,11 @@ public class StreamPrefetcherCacheController extends CacheController {
 		
 		if(bite == null)throw new NullPointerException("var Can Not Be Null");
 		
-		cache.get(false, eAddress + 1);
-		cache.get(false, eAddress + 32);
+		//cache.get(false, eAddress + 1);
 		cache.get(false, eAddress + 64);
 		cache.get(false, eAddress + 128);
-		cache.get(false, eAddress + 192);
+		//cache.get(false, eAddress + 128);
+		//cache.get(false, eAddress + 192);
 		
 		cacheStats.ACCESS++;
 		//cacheStats.WRITE++;

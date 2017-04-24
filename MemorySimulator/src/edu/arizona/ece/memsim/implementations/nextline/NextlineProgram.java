@@ -6,6 +6,24 @@ import edu.arizona.ece.memsim.model.Memory;
 
 public class NextlineProgram extends ProgramSmall {
 	
+	
+	public static void main(String[] args) throws InterruptedException{
+		Run();
+	}
+	
+	public static void Run() throws InterruptedException{
+		try {
+			Reset();
+			SequentialAccess();
+			Reset();
+			RandomAccess();
+			Reset();
+			StrideAccess(true, 128);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	protected static void Reset() throws Exception{
 		System.out.println("\n+---------------+");
 		System.out.println("| Running Reset (Override) |");
