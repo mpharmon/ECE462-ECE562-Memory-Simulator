@@ -7,13 +7,15 @@ import edu.arizona.ece.memsim.model.MemoryResult;
 public class MarkovPrefetcherCacheController extends CacheController {
 	
 	public MarkovPrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
-			CacheController pCache) throws InterruptedException {
+			CacheController pCache, Integer memSize) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pCache);
+		HistoryTable.initialize(memSize/cache.getBlockSize());
 	}
 	
 	public MarkovPrefetcherCacheController(Integer level, Integer tSize, Integer bSize, Integer assoc, Integer aTime,
-			Memory pMemory) throws InterruptedException {
+			Memory pMemory, Integer memSize) throws InterruptedException {
 		super(level, tSize, bSize, assoc, aTime, pMemory);
+		HistoryTable.initialize(memSize/cache.getBlockSize());
 	}
 
 	public MemoryResult get(Boolean trackStats, Integer eAddress) throws Exception{
@@ -31,12 +33,9 @@ public class MarkovPrefetcherCacheController extends CacheController {
 		
 		returnValue.addMemoryElement(cache.get(true, eAddress));
 		
-		cache.get(false, eAddress + 1);
-		cache.get(false, eAddress + 32);
-		cache.get(false, eAddress + 64);
-		cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 192);
+		cache.get(false, 
+				  HistoryTable.getNextCandidate(eAddress/cache.getBlockSize(),
+				  cache.getBlockSize()));
 		
 		if(DEBUG_LEVEL >= 2)System.out.println("...Returning " + returnValue);
 		
@@ -66,12 +65,9 @@ public class MarkovPrefetcherCacheController extends CacheController {
 		
 		cache.put(trackStats, eAddress, bite);
 		
-		cache.get(false, eAddress + 1);
-		cache.get(false, eAddress + 32);
-		cache.get(false, eAddress + 64);
-		cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 128);
-		//cache.get(false, eAddress + 192);
+		cache.get(false, 
+				  HistoryTable.getNextCandidate(eAddress/cache.getBlockSize(),
+				  cache.getBlockSize()));
 		
 		if(trackStats)cacheStats.ACCESS++;
 		
