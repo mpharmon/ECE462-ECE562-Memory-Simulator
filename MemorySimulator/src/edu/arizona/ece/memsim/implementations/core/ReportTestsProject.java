@@ -3,6 +3,8 @@ package edu.arizona.ece.memsim.implementations.core;
 import edu.arizona.ece.memsim.implementations.markov.MarkovPrefetcherCacheController;
 import edu.arizona.ece.memsim.implementations.nextline.NextlinePrefetcherCacheController;
 import edu.arizona.ece.memsim.implementations.stream.StreamPrefetcherCacheController;
+import edu.arizona.ece.memsim.implementations.CP.ProgramPatternController;
+
 import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.CacheStatistics;
 import edu.arizona.ece.memsim.model.CacheStatisticsAnalysis;
@@ -337,16 +339,34 @@ public class ReportTestsProject{
 		L1 = null;
 		L1 = new MarkovPrefetcherCacheController(1, 1024, 32, 0, 1, L2, mem.getSize());// 1KB, 32B Block, Fully Associative, 1 Cycle Access
 	}
+	protected static void ResetCP(Boolean display) throws Exception{
+		
+		if(display){
+			System.out.println("\n+--------------------+");
+			System.out.println("| Running Dynamic Correlated Reset |");
+			System.out.println("+--------------------+\n");
+		}
+		
+		mem = null;
+		mem = new Memory(16384, 200);// 16KB, 200 Cycle Access
+		L2 = null;
+		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
+		L1 = null;
+		L1 = new ProgramPatternController(1, 1024, 32, 0, 1, L2,mem.getSize());// 1KB, 32B Block, Fully Associative, 1 Cycle Access
+	}
+	
 	//Prefetcher selector
 	//0 - Base
 	//1 - Nextline
 	//2 - Stream
 	//3 - Markov
+	//4 - Dynamic Correlation
 	protected static void prefetchSelect(Integer select, boolean display)  throws Exception{
 		switch(select){
 			case 1: 	ResetNextLine(display); break;
 			case 2: 	ResetStream(display);   break;
 			case 3: 	ResetMarkov(display);   break;
+			case 4:     ResetCP(display);	   break;
 			default:	ResetBase(display); 	break;
 		}
 	}

@@ -1,24 +1,55 @@
 package edu.arizona.ece.memsim.implementations.CP;
 
-import java.util.Random;
+//import java.util.Random;
 
 import edu.arizona.ece.memsim.model.CacheController;
-import edu.arizona.ece.memsim.model.CacheStatistics;
 import edu.arizona.ece.memsim.model.Memory;
+//import edu.arizona.ece.memsim.implementations.core.Program;
+import edu.arizona.ece.memsim.implementations.core.ProgramSmall;
+//import edu.arizona.ece.memsim.implementations.nextline.NextlinePrefetcherCacheController;
 
-//public class CP extends Program {
-public class CP  {	
+
+public class CP extends ProgramSmall {
+//public class CP  {	
 	
-	protected static CacheController L1, L2;
-	protected static Memory mem;
-	private static Integer BlockSize ;
-	private static Integer TotalMemSize;
-
+	//protected static CacheController L1, L2;
+	//protected static Memory mem;
+	//private static Integer BlockSize ;
+	//private static Integer TotalMemSize;
 	public static void main(String[] args) throws InterruptedException{
 		Run();
-		System.exit(0);
+	}
+
+	public static void Run() throws InterruptedException{
+		try {
+			Reset();
+			SequentialAccess();
+			Reset();
+			RandomAccess();
+			Reset();
+			StrideAccess(true, 128);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
+	protected static void Reset() throws Exception{
+		System.out.println("\n+---------------+");
+		System.out.println("| Running Reset (Override) |");
+		System.out.println("+---------------+\n");
+		
+		mem = null;
+		mem = new Memory(16384, 200);// 16KB, 200 Cycle Access
+		L2 = null;
+		L2 = new CacheController(2, 4096, 128, 16, 20, mem);// 4KB, 128B Block, 16-Way Associative, 20 Cycle Access
+		L1 = null;
+		L1 = new ProgramPatternController(1, 1024, 32, 0, 1, L2, mem.getSize());// 1KB, 32B Block, Fully Associative, 1 Cycle Access
+	}
+	
+	
+	
+	
+	/*
 	public static void Run() throws InterruptedException{
 		try {
 			Reset();//
@@ -41,26 +72,18 @@ public class CP  {
 		}
 		return;
 	}
-	
-	public static void Reset() throws Exception{
-		BlockSize = 64; 		// Coherence block size must be the same
-		TotalMemSize = 131072;
-		//TotalMemSize = 134217728;
-		mem = null;
-		mem = new Memory(TotalMemSize, 200);// TotalMemSize B, BlockSize B Block, 200 Cycle Access 
-		L2 = null;//Cache controller to keep it consistent for the prefetching on L1 cache 
-		L2 = new CacheController(2, 131072, BlockSize, 16, 20, mem);// 128KB, 64B Block, 16-Way Associative, 20 Cycle Access		
-		L1 = null; // fully asocciative is 1
-		L1 = new ProgramPatternController(1,TotalMemSize ,8192, BlockSize, 1, 1, L2);// 8KB, 64B Block, Fully associative, 1 Cycle Access
-	}	
+	*/
+
 
   // Memory Access Pattern Organized by Difficulty, The Easiest one is the first one 
 	//Verifying Hits for perfect memory pattern
+	
+	/*
 	public static void BasicSequentialAccess() throws Exception{
 		System.out.println("Running Perfect Sequential Memory Access");
 		//For debugging perfect if you prefetech the next block always
 		for(int i = 0; i < TotalMemSize; i++){
-			L1.get(i);
+			//L1.get(i);
 		}
 		printStats("L1", L1.getCacheStats());
 		printStats("L2", L2.getCacheStats());
@@ -173,7 +196,8 @@ public class CP  {
 		printStats("M1", mem.getMemoryStats());
 	}
 	
-	
+	*/
+	/*
 	protected static void printStats(String prefix, CacheStatistics stats){
 		System.out.println(prefix + ".ACCESSES\t\t" + stats.ACCESS);
 		System.out.println(prefix + ".READ_TOTAL\t\t" + (stats.READ_HIT + stats.READ_MISS));
@@ -191,5 +215,5 @@ public class CP  {
 		System.out.println(prefix + ".REPLACEMENTS\t\t" + stats.REPLACEMENT);
 		System.out.println(prefix + ".INVALIDATES\t\t" + stats.INVALIDATE);
 	}
-	
+	*/
 }
