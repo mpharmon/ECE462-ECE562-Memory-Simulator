@@ -1,6 +1,8 @@
 package edu.arizona.ece.memsim.implementations.CP;
 
 //import java.util.Random;
+import edu.arizona.ece.memsim.implementations.core.*;
+
 
 import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.Memory;
@@ -9,7 +11,7 @@ import edu.arizona.ece.memsim.implementations.core.ProgramSmall;
 //import edu.arizona.ece.memsim.implementations.nextline.NextlinePrefetcherCacheController;
 
 
-public class CP extends ProgramSmall {
+public class CP extends ReportTestsProject {
 //public class CP  {	
 	
 	//protected static CacheController L1, L2;
@@ -22,12 +24,12 @@ public class CP extends ProgramSmall {
 
 	public static void Run() throws InterruptedException{
 		try {
-			Reset();
-			SequentialAccess();
-			Reset();
-			RandomAccess();
-			Reset();
-			StrideAccess(true, 128);
+			//Reset();
+			//SequentialAccess();
+			//Reset();
+			//RandomAccess();
+			//Reset();
+			//StrideAccess(true, 128);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

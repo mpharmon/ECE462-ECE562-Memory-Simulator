@@ -3,7 +3,7 @@ package edu.arizona.ece.memsim.implementations.core;
 import edu.arizona.ece.memsim.implementations.markov.MarkovPrefetcherCacheController;
 import edu.arizona.ece.memsim.implementations.nextline.NextlinePrefetcherCacheController;
 import edu.arizona.ece.memsim.implementations.stream.StreamPrefetcherCacheController;
-import edu.arizona.ece.memsim.implementations.CP.ProgramPatternController;
+import edu.arizona.ece.memsim.implementations.CP.*;
 
 import edu.arizona.ece.memsim.model.CacheController;
 import edu.arizona.ece.memsim.model.CacheStatistics;
@@ -19,7 +19,7 @@ public class ReportTestsProject{
 	
 	protected static Memory mem;
 	
-	public static Integer SELECT = 0;
+	public static Integer SELECT = 4;
 	
 	public static void main(String[] args) throws InterruptedException{
 		Run();
